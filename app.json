@@ -1,0 +1,67 @@
+{
+  "name": "Address Collect Campaign System",
+  "description": "Campaign address collection system with Next.js, Supabase PostgreSQL, and custom OTP authentication",
+  "repository": "https://github.com/thorsws/AddressCollect",
+  "logo": "https://cdn.jsdelivr.net/gh/thorsws/AddressCollect/public/logo.png",
+  "keywords": [
+    "nextjs",
+    "supabase",
+    "campaigns",
+    "address-collection",
+    "otp-authentication"
+  ],
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": {
+      "description": "Your Supabase project URL",
+      "required": true
+    },
+    "SUPABASE_KEY": {
+      "description": "Your Supabase service role key (keep secret!)",
+      "required": true
+    },
+    "ADMIN_EMAIL_ALLOWLIST": {
+      "description": "Comma-separated list of admin emails",
+      "required": true
+    },
+    "MAILGUN_API_KEY": {
+      "description": "Mailgun API key for sending OTP emails",
+      "required": true
+    },
+    "MAILGUN_DOMAIN": {
+      "description": "Mailgun domain",
+      "required": true
+    },
+    "MAILGUN_FROM": {
+      "description": "From email address for OTP emails",
+      "required": true
+    },
+    "APP_BASE_URL": {
+      "description": "Base URL of your application (e.g., https://your-app.herokuapp.com)",
+      "required": true
+    },
+    "ADMIN_SESSION_TTL_DAYS": {
+      "description": "Number of days admin sessions remain valid",
+      "value": "7",
+      "required": false
+    },
+    "NODE_ENV": {
+      "description": "Node environment",
+      "value": "production"
+    }
+  },
+  "addons": [],
+  "scripts": {
+    "postdeploy": "echo 'Deployment complete! Make sure to run database migrations via Supabase CLI.'"
+  }
+}
