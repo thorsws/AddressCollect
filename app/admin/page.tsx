@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
 
@@ -64,18 +65,18 @@ export default async function AdminDashboard() {
             <p className="text-gray-600">Manage your giveaway campaigns and view claims.</p>
           </div>
           <div className="flex space-x-3">
-            <a
+            <Link
               href="/admin/campaigns/create"
               className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700"
             >
               + Create Campaign
-            </a>
-            <a
+            </Link>
+            <Link
               href="/admin/addresses"
               className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
             >
               View All Addresses
-            </a>
+            </Link>
           </div>
         </div>
 
