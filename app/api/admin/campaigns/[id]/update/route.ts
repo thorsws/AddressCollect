@@ -4,13 +4,15 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Check admin authentication
   const admin = await requireAdmin();
   if (admin instanceof Response) {
     return admin;
   }
+
+  const { id } = await params;
 
   try {
     const data = await request.json();
@@ -35,7 +37,7 @@ export async function PUT(
         max_claims_per_ip_per_day: parseInt(data.max_claims_per_ip_per_day) || 5,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', params.id)
+      .eq('id', id)
       .select()
       .single();
 
