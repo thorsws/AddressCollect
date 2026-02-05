@@ -31,10 +31,19 @@ if [ ! -f .env.local ]; then
   exit 1
 fi
 
-# Source .env.local
-set -a
-source .env.local
-set +a
+# Parse .env.local (ignore comments and empty lines)
+while IFS='=' read -r key value; do
+  # Skip comments and empty lines
+  [[ $key =~ ^#.* ]] && continue
+  [[ -z $key ]] && continue
+
+  # Remove quotes from value if present
+  value="${value%\"}"
+  value="${value#\"}"
+
+  # Export variable
+  export "$key=$value"
+done < <(grep -v '^#' .env.local | grep -v '^$')
 
 # Set Heroku config vars
 echo "Setting NEXT_PUBLIC_SUPABASE_URL..."

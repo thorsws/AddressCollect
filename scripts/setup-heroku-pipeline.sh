@@ -10,7 +10,7 @@ echo ""
 
 # Configuration
 PIPELINE_NAME="address-collect"
-ORG_NAME="cognitive-kin"
+ORG_NAME="cognitivekin"
 STAGING_APP_NAME="address-collect-staging"
 PROD_APP_NAME="address-collect-prod"
 
@@ -36,29 +36,14 @@ fi
 echo -e "${GREEN}✅ Logged in to Heroku${NC}"
 echo ""
 
-# Create pipeline
-echo "📦 Creating pipeline: $PIPELINE_NAME"
-if heroku pipelines:info $PIPELINE_NAME &> /dev/null; then
-  echo -e "${YELLOW}⚠️  Pipeline already exists${NC}"
-else
-  heroku pipelines:create $PIPELINE_NAME --org $ORG_NAME
-  echo -e "${GREEN}✅ Pipeline created${NC}"
-fi
-echo ""
-
-# Create staging app
+# Create staging app first
 echo "🔨 Creating staging app: $STAGING_APP_NAME"
 if heroku apps:info --app $STAGING_APP_NAME &> /dev/null; then
   echo -e "${YELLOW}⚠️  Staging app already exists${NC}"
 else
-  heroku apps:create $STAGING_APP_NAME --org $ORG_NAME
+  heroku apps:create $STAGING_APP_NAME --team $ORG_NAME
   echo -e "${GREEN}✅ Staging app created${NC}"
 fi
-
-# Add staging app to pipeline
-echo "Adding staging app to pipeline..."
-heroku pipelines:add $PIPELINE_NAME --app $STAGING_APP_NAME --stage staging
-echo -e "${GREEN}✅ Staging app added to pipeline${NC}"
 echo ""
 
 # Create production app
@@ -66,9 +51,20 @@ echo "🏭 Creating production app: $PROD_APP_NAME"
 if heroku apps:info --app $PROD_APP_NAME &> /dev/null; then
   echo -e "${YELLOW}⚠️  Production app already exists${NC}"
 else
-  heroku apps:create $PROD_APP_NAME --org $ORG_NAME
+  heroku apps:create $PROD_APP_NAME --team $ORG_NAME
   echo -e "${GREEN}✅ Production app created${NC}"
 fi
+echo ""
+
+# Create pipeline with staging app
+echo "📦 Creating pipeline: $PIPELINE_NAME"
+if heroku pipelines:info $PIPELINE_NAME &> /dev/null; then
+  echo -e "${YELLOW}⚠️  Pipeline already exists${NC}"
+else
+  heroku pipelines:create $PIPELINE_NAME --app $STAGING_APP_NAME --stage staging --team $ORG_NAME
+  echo -e "${GREEN}✅ Pipeline created with staging app${NC}"
+fi
+echo ""
 
 # Add production app to pipeline
 echo "Adding production app to pipeline..."
