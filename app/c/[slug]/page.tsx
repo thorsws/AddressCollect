@@ -10,11 +10,44 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
     .from('campaigns')
     .select('*')
     .eq('slug', slug)
-    .eq('is_active', true)
     .single();
 
   if (error || !campaign) {
     notFound();
+  }
+
+  // Show message if campaign is inactive
+  if (!campaign.is_active) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-2xl w-full p-8">
+          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+            <div className="mb-6">
+              <svg
+                className="mx-auto h-16 w-16 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">{campaign.title}</h1>
+            <p className="text-lg text-gray-600 mb-2">
+              This campaign is currently unavailable.
+            </p>
+            <p className="text-sm text-gray-500">
+              Please check back later or contact us for more information.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Check if campaign is within date window
