@@ -63,12 +63,20 @@ export default async function AdminDashboard() {
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Campaigns</h2>
             <p className="text-gray-600">Manage your giveaway campaigns and view claims.</p>
           </div>
-          <a
-            href="/admin/addresses"
-            className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
-          >
-            View All Addresses
-          </a>
+          <div className="flex space-x-3">
+            <a
+              href="/admin/campaigns/create"
+              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700"
+            >
+              + Create Campaign
+            </a>
+            <a
+              href="/admin/addresses"
+              className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
+            >
+              View All Addresses
+            </a>
+          </div>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
