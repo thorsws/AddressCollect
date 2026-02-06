@@ -10,6 +10,7 @@ const DEFAULT_SESSION_TTL_DAYS = 7;
  */
 export async function createSession(
   email: string,
+  userId: string,
   ipHash: string,
   userAgent: string | null
 ): Promise<string> {
@@ -26,6 +27,7 @@ export async function createSession(
     .from('admin_sessions')
     .insert({
       email,
+      user_id: userId,
       session_token_hash: sessionTokenHash,
       expires_at: expiresAt,
       ip_hash: ipHash,
@@ -67,14 +69,23 @@ export async function getSessionToken(): Promise<string | null> {
 }
 
 /**
- * Verify and get session from token
+ * Verify and get session from token (with user data)
  */
 export async function verifySession(sessionToken: string) {
   const sessionTokenHash = hashValue(sessionToken);
 
   const { data: session, error } = await supabaseAdmin
     .from('admin_sessions')
-    .select('*')
+    .select(`
+      *,
+      admin_users!inner (
+        id,
+        email,
+        name,
+        role,
+        is_active
+      )
+    `)
     .eq('session_token_hash', sessionTokenHash)
     .is('revoked_at', null)
     .single();
@@ -88,7 +99,21 @@ export async function verifySession(sessionToken: string) {
     return null;
   }
 
-  return session;
+  // Check if user is active
+  const user = (session as any).admin_users;
+  if (!user || !user.is_active) {
+    return null;
+  }
+
+  return {
+    ...session,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+    },
+  };
 }
 
 /**

@@ -30,3 +30,11 @@ export function generateSessionToken(): string {
 export function hashIP(ip: string): string {
   return hashValue(ip);
 }
+
+/**
+ * Generate a secure random claim token for pre-created claims
+ * Returns a URL-safe token
+ */
+export function generateClaimToken(): string {
+  return randomBytes(24).toString('base64url');
+}

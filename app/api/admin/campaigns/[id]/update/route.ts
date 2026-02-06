@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { canEditCampaign } from '@/lib/admin/permissions';
 
 export async function PUT(
   request: NextRequest,
@@ -15,6 +16,28 @@ export async function PUT(
   const { id } = await params;
 
   try {
+    // Fetch the campaign to check ownership
+    const { data: existingCampaign, error: fetchError } = await supabaseAdmin
+      .from('campaigns')
+      .select('id, created_by')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingCampaign) {
+      return NextResponse.json(
+        { error: 'Campaign not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check permission to edit
+    if (!canEditCampaign(admin.role, existingCampaign.created_by, admin.id)) {
+      return NextResponse.json(
+        { error: 'Forbidden - You do not have permission to edit this campaign' },
+        { status: 403 }
+      );
+    }
+
     const data = await request.json();
 
     // Update campaign
@@ -23,7 +46,7 @@ export async function PUT(
       .update({
         title: data.title,
         description: data.description || null,
-        capacity_total: parseInt(data.capacity_total),
+        capacity_total: data.capacity_total ? parseInt(data.capacity_total) : null,
         is_active: data.is_active !== false,
         require_email: data.require_email !== false,
         require_email_verification: data.require_email_verification === true,
@@ -35,7 +58,11 @@ export async function PUT(
         privacy_blurb: data.privacy_blurb || null,
         max_claims_per_email: parseInt(data.max_claims_per_email) || 1,
         max_claims_per_ip_per_day: parseInt(data.max_claims_per_ip_per_day) || 5,
+        test_mode: data.test_mode === true,
+        show_banner: data.show_banner === true,
+        banner_url: data.banner_url || null,
         updated_at: new Date().toISOString(),
+        updated_by: admin.id,
       })
       .eq('id', id)
       .select()

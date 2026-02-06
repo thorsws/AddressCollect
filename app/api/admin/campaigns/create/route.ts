@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { canCreateCampaign } from '@/lib/admin/permissions';
 
 export async function POST(request: NextRequest) {
   // Check admin authentication
@@ -9,13 +10,21 @@ export async function POST(request: NextRequest) {
     return admin;
   }
 
+  // Check permission to create campaigns
+  if (!canCreateCampaign(admin.role)) {
+    return NextResponse.json(
+      { error: 'Forbidden - You do not have permission to create campaigns' },
+      { status: 403 }
+    );
+  }
+
   try {
     const data = await request.json();
 
-    // Validate required fields
-    if (!data.slug || !data.title || !data.capacity_total) {
+    // Validate required fields (capacity_total is optional - null/0 means unlimited)
+    if (!data.slug || !data.title) {
       return NextResponse.json(
-        { error: 'Missing required fields: slug, title, capacity_total' },
+        { error: 'Missing required fields: slug, title' },
         { status: 400 }
       );
     }
@@ -41,7 +50,7 @@ export async function POST(request: NextRequest) {
         slug: data.slug,
         title: data.title,
         description: data.description || null,
-        capacity_total: parseInt(data.capacity_total),
+        capacity_total: data.capacity_total ? parseInt(data.capacity_total) : null,
         is_active: data.is_active !== false,
         require_email: data.require_email !== false,
         require_email_verification: data.require_email_verification === true,
@@ -53,6 +62,11 @@ export async function POST(request: NextRequest) {
         privacy_blurb: data.privacy_blurb || null,
         max_claims_per_email: parseInt(data.max_claims_per_email) || 1,
         max_claims_per_ip_per_day: parseInt(data.max_claims_per_ip_per_day) || 5,
+        test_mode: data.test_mode === true,
+        show_banner: data.show_banner === true,
+        banner_url: data.banner_url || null,
+        created_by: admin.id,
+        updated_by: admin.id,
       })
       .select()
       .single();

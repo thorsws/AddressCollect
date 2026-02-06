@@ -1,0 +1,203 @@
+'use client';
+
+import { useState } from 'react';
+
+interface Claim {
+  id: string;
+  status: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  address1: string;
+  address2: string | null;
+  city: string;
+  region: string;
+  postal_code: string;
+  claim_token: string | null;
+  is_test_claim: boolean;
+  shipped_at: string | null;
+  created_at: string;
+  campaigns: {
+    slug: string;
+    title: string;
+  } | null;
+}
+
+interface Props {
+  claims: Claim[];
+}
+
+export default function ClaimsFilter({ claims }: Props) {
+  const [showTest, setShowTest] = useState(false); // Default: hide test claims
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Apply filters
+  const filteredClaims = claims.filter(claim => {
+    // Test filter
+    if (!showTest && claim.is_test_claim) return false;
+
+    // Status filter
+    if (statusFilter === 'confirmed' && claim.status !== 'confirmed') return false;
+    if (statusFilter === 'pending' && claim.status !== 'pending') return false;
+    if (statusFilter === 'pre-created' && !(claim.claim_token && !claim.address1)) return false;
+    if (statusFilter === 'shipped' && !claim.shipped_at) return false;
+
+    return true;
+  });
+
+  // Count stats
+  const testCount = claims.filter(c => c.is_test_claim).length;
+
+  return (
+    <>
+      {/* Filters */}
+      <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap gap-4 items-center">
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Status:</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="confirmed">Confirmed</option>
+            <option value="pending">Pending</option>
+            <option value="pre-created">Pre-Created</option>
+            <option value="shipped">Shipped</option>
+          </select>
+        </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showTest}
+            onChange={(e) => setShowTest(e.target.checked)}
+            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+          />
+          <span className="text-gray-700">
+            Show test claims ({testCount})
+          </span>
+        </label>
+
+        <span className="text-sm text-gray-500 ml-auto">
+          Showing {filteredClaims.length} of {claims.length} claims
+        </span>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Campaign
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[250px]">
+                Address
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                City, Region
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Postal
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Created
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredClaims.map((claim) => {
+              const isPreCreated = claim.claim_token && !claim.address1;
+              return (
+                <tr
+                  key={claim.id}
+                  className={`${isPreCreated ? 'bg-orange-50' : ''} ${claim.is_test_claim ? 'bg-purple-50' : ''}`}
+                >
+                  <td className="px-4 py-4 whitespace-nowrap text-sm">
+                    <div>
+                      <div className="font-medium text-gray-900">{claim.campaigns?.title}</div>
+                      <div className="text-gray-500 text-xs">/{claim.campaigns?.slug}</div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <div className="flex flex-col gap-1">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded inline-block w-fit ${
+                          claim.status === 'confirmed'
+                            ? 'bg-green-100 text-green-800'
+                            : claim.status === 'pending'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : claim.status === 'rejected'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {claim.status}
+                      </span>
+                      {claim.is_test_claim && (
+                        <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-800 inline-block w-fit">
+                          TEST
+                        </span>
+                      )}
+                      {isPreCreated && (
+                        <span className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-800 inline-block w-fit">
+                          PRE-CREATED
+                        </span>
+                      )}
+                      {claim.shipped_at && (
+                        <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800 inline-block w-fit">
+                          SHIPPED
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {claim.first_name} {claim.last_name}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {claim.email || '-'}
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-900 min-w-[250px]">
+                    {isPreCreated ? (
+                      <span className="text-gray-400 italic">Awaiting address...</span>
+                    ) : (
+                      <>
+                        {claim.address1}
+                        {claim.address2 && <><br />{claim.address2}</>}
+                      </>
+                    )}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {isPreCreated ? '-' : `${claim.city}, ${claim.region}`}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {isPreCreated ? '-' : claim.postal_code}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {new Date(claim.created_at).toLocaleDateString()}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+
+        {filteredClaims.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No claims match your filters.</p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { canManageUsers } from '@/lib/admin/permissions';
 
 export default async function AdminDashboard() {
   const admin = await requireAdmin();
@@ -44,7 +45,17 @@ export default async function AdminDashboard() {
           <div className="flex justify-between h-16 items-center">
             <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">{admin.email}</span>
+              <span className="text-sm text-gray-600">
+                {admin.name} ({admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Viewer'})
+              </span>
+              {canManageUsers(admin.role) && (
+                <Link
+                  href="/admin/users"
+                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                >
+                  Manage Users
+                </Link>
+              )}
               <form action="/api/admin/auth/logout" method="POST">
                 <button
                   type="submit"
@@ -103,7 +114,7 @@ export default async function AdminDashboard() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Confirmed:</span>
                   <span className="font-semibold text-gray-900">
-                    {campaign.confirmedCount} / {campaign.capacity_total}
+                    {campaign.confirmedCount}{campaign.capacity_total ? ` / ${campaign.capacity_total}` : ' (Unlimited)'}
                   </span>
                 </div>
                 {campaign.pendingCount > 0 && (
@@ -112,17 +123,19 @@ export default async function AdminDashboard() {
                     <span className="font-semibold text-yellow-600">{campaign.pendingCount}</span>
                   </div>
                 )}
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{
-                      width: `${Math.min(
-                        (campaign.confirmedCount / campaign.capacity_total) * 100,
-                        100
-                      )}%`,
-                    }}
-                  />
-                </div>
+                {campaign.capacity_total && (
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-600 h-2 rounded-full"
+                      style={{
+                        width: `${Math.min(
+                          (campaign.confirmedCount / campaign.capacity_total) * 100,
+                          100
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex space-x-2">

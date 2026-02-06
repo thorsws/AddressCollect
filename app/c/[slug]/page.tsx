@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import CampaignForm from './CampaignForm';
+import BannerPreview from './BannerPreview';
 
 export default async function CampaignPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -44,6 +45,17 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             <p className="text-sm text-gray-500">
               Please check back later or contact us for more information.
             </p>
+            {campaign.contact_email && (
+              <p className="text-gray-600 text-sm mt-4">
+                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+                <a
+                  href={`mailto:${campaign.contact_email}`}
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  {campaign.contact_email}
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -89,13 +101,14 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
       .from('claims')
       .select('*', { count: 'exact', head: true })
       .eq('campaign_id', campaign.id)
-      .eq('status', 'confirmed');
+      .eq('status', 'confirmed')
+      .eq('is_test_claim', false);
 
     claimCount = count || 0;
   }
 
-  // Check if capacity is full
-  const isFull = claimCount >= campaign.capacity_total;
+  // Check if capacity is full (only if capacity is set)
+  const isFull = campaign.capacity_total && claimCount >= campaign.capacity_total;
 
   if (isFull) {
     return (
@@ -109,6 +122,17 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             <p className="text-gray-500 text-sm">
               Thank you for your interest. Unfortunately, we&apos;ve reached our capacity for this campaign.
             </p>
+            {campaign.contact_email && (
+              <p className="text-gray-600 text-sm mt-4">
+                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+                <a
+                  href={`mailto:${campaign.contact_email}`}
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  {campaign.contact_email}
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -125,12 +149,16 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               <p className="text-gray-600 mb-6">{campaign.description}</p>
             )}
 
-            {campaign.show_scarcity && (
+            {campaign.show_scarcity && campaign.capacity_total && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-blue-900 font-medium">
                   {campaign.capacity_total - claimCount} of {campaign.capacity_total} spots remaining
                 </p>
               </div>
+            )}
+
+            {campaign.show_banner && campaign.banner_url && (
+              <BannerPreview url={campaign.banner_url} />
             )}
 
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -140,6 +168,18 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
                   "We only use your address to ship the book. We won't sell your information."}
               </p>
             </div>
+
+            {campaign.contact_email && (
+              <p className="text-gray-600 text-sm mt-4">
+                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+                <a
+                  href={`mailto:${campaign.contact_email}`}
+                  className="text-blue-600 hover:text-blue-700 underline"
+                >
+                  {campaign.contact_email}
+                </a>
+              </p>
+            )}
           </div>
 
           <CampaignForm campaign={campaign} />

@@ -5,6 +5,156 @@ import { hashIP, generateSessionToken, hashValue } from '@/lib/crypto/hash';
 import { getClientIP, getUserAgent } from '@/lib/utils/request';
 import { sendClaimVerificationEmail } from '@/lib/mailgun';
 
+/**
+ * Handle submission of a pre-created claim (via unique token URL)
+ */
+async function handlePreCreatedClaim(
+  claimToken: string,
+  campaign: any,
+  data: any
+): Promise<NextResponse> {
+  const {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode} = data;
+
+  // Validate required fields
+  if (!firstName || !lastName || !address1 || !city || !region || !postalCode || !country) {
+    return NextResponse.json(
+      { error: 'Missing required address fields' },
+      { status: 400 }
+    );
+  }
+
+  // Fetch the pre-created claim
+  const { data: existingClaim, error: claimError } = await supabaseAdmin
+    .from('claims')
+    .select('*')
+    .eq('claim_token', claimToken)
+    .eq('campaign_id', campaign.id)
+    .single();
+
+  if (claimError || !existingClaim) {
+    return NextResponse.json(
+      { error: 'Invalid or expired claim token' },
+      { status: 404 }
+    );
+  }
+
+  // Check if already submitted (has address)
+  if (existingClaim.address1) {
+    return NextResponse.json(
+      { error: 'This claim has already been submitted' },
+      { status: 400 }
+    );
+  }
+
+  // Get client info
+  const clientIP = await getClientIP();
+  const ipHash = hashIP(clientIP);
+  const userAgent = await getUserAgent();
+
+  // Generate address fingerprint
+  const addressFingerprint = generateAddressFingerprint(
+    firstName,
+    lastName,
+    address1,
+    city,
+    region,
+    postalCode,
+    country
+  );
+
+  // Check for duplicate address in other claims
+  const { data: duplicateAddress } = await supabaseAdmin
+    .from('claims')
+    .select('id')
+    .eq('campaign_id', campaign.id)
+    .eq('address_fingerprint', addressFingerprint)
+    .neq('id', existingClaim.id) // Exclude the current claim
+    .single();
+
+  if (duplicateAddress) {
+    return NextResponse.json(
+      { error: 'This address has already been claimed for this campaign' },
+      { status: 400 }
+    );
+  }
+
+  // Determine final status
+  const finalStatus = campaign.require_email_verification && email ? 'pending' : 'confirmed';
+
+  // Update the claim with address and other fields
+  const { data: updatedClaim, error: updateError } = await supabaseAdmin
+    .from('claims')
+    .update({
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      email: email ? email.trim() : existingClaim.email,
+      company: company ? company.trim() : existingClaim.company,
+      title: title ? title.trim() : existingClaim.title,
+      phone: phone ? phone.trim() : existingClaim.phone,
+      address1: address1.trim(),
+      address2: address2 ? address2.trim() : null,
+      city: city.trim(),
+      region: region.trim(),
+      postal_code: postalCode.trim(),
+      country: country.trim(),
+      invite_code: inviteCode ? inviteCode.toUpperCase() : null,
+      email_normalized: email ? normalizeEmail(email) : (existingClaim.email ? normalizeEmail(existingClaim.email) : null),
+      address_fingerprint: addressFingerprint,
+      ip_hash: ipHash,
+      user_agent: userAgent,
+      status: finalStatus,
+      is_test_claim: campaign.test_mode,
+      confirmed_at: finalStatus === 'confirmed' ? new Date().toISOString() : null,
+    })
+    .eq('id', existingClaim.id)
+    .select()
+    .single();
+
+  if (updateError) {
+    console.error('[Pre-Claim] Update error:', updateError);
+    return NextResponse.json(
+      { error: 'Failed to submit claim' },
+      { status: 500 }
+    );
+  }
+
+  // Send verification email if required
+  if (campaign.require_email_verification && email) {
+    const verificationToken = generateSessionToken();
+    const tokenHash = hashValue(verificationToken);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+    await supabaseAdmin
+      .from('email_verifications')
+      .insert({
+        claim_id: updatedClaim.id,
+        token_hash: tokenHash,
+        expires_at: expiresAt,
+      });
+
+    const verificationLink = `${process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
+    try {
+      await sendClaimVerificationEmail(email, verificationLink, campaign.title);
+    } catch (emailError) {
+      console.error('[Pre-Claim] Failed to send verification email:', emailError);
+    }
+
+    return NextResponse.json({
+      ok: true,
+      requiresVerification: true,
+      claimId: updatedClaim.id,
+    });
+  }
+
+  console.log(`[Pre-Claim] Submitted: Token=${claimToken}, Email=${email || 'none'}`);
+
+  return NextResponse.json({
+    ok: true,
+    requiresVerification: false,
+    claimId: updatedClaim.id,
+  });
+}
+
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
@@ -27,6 +177,7 @@ export async function POST(
       postalCode,
       country,
       inviteCode,
+      claimToken, // Optional: for pre-created claims
     } = body;
 
     // 1. Load campaign
@@ -59,7 +210,16 @@ export async function POST(
       );
     }
 
-    // 3. Validate required fields
+    // 3. Handle pre-created claim with token
+    if (claimToken) {
+      return await handlePreCreatedClaim(
+        claimToken,
+        campaign,
+        {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode}
+      );
+    }
+
+    // 3b. Validate required fields
     if (!firstName || !lastName || !address1 || !city || !region || !postalCode || !country) {
       return NextResponse.json(
         { error: 'Missing required address fields' },
@@ -113,18 +273,21 @@ export async function POST(
         .eq('id', codeData.id);
     }
 
-    // 5. Check capacity
-    const { count: confirmedCount } = await supabaseAdmin
-      .from('claims')
-      .select('*', { count: 'exact', head: true })
-      .eq('campaign_id', campaign.id)
-      .eq('status', 'confirmed');
+    // 5. Check capacity (skip if unlimited - capacity_total is null or 0)
+    if (campaign.capacity_total && campaign.capacity_total > 0) {
+      const { count: confirmedCount } = await supabaseAdmin
+        .from('claims')
+        .select('*', { count: 'exact', head: true })
+        .eq('campaign_id', campaign.id)
+        .eq('status', 'confirmed')
+        .eq('is_test_claim', false);
 
-    if (confirmedCount && confirmedCount >= campaign.capacity_total) {
-      return NextResponse.json(
-        { error: 'Campaign is at capacity' },
-        { status: 400 }
-      );
+      if (confirmedCount && confirmedCount >= campaign.capacity_total) {
+        return NextResponse.json(
+          { error: 'Campaign is at capacity' },
+          { status: 400 }
+        );
+      }
     }
 
     // 6. Get client info for rate limiting
@@ -200,6 +363,7 @@ export async function POST(
       .insert({
         campaign_id: campaign.id,
         status: initialStatus,
+        is_test_claim: campaign.test_mode,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
         email: email ? email.trim() : null,

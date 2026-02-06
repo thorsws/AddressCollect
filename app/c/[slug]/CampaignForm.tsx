@@ -12,6 +12,9 @@ interface Campaign {
   collect_company: boolean;
   collect_phone: boolean;
   collect_title: boolean;
+  test_mode: boolean;
+  show_banner: boolean;
+  banner_url: string | null;
 }
 
 interface FormData {

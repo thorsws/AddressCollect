@@ -18,11 +18,21 @@ export async function POST(request: NextRequest) {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if email is in allowlist
-    const allowlist = process.env.ADMIN_EMAIL_ALLOWLIST?.split(',').map(e => e.trim().toLowerCase()) || [];
-    if (!allowlist.includes(normalizedEmail)) {
-      // Don't reveal if email is not in allowlist for security
-      console.log(`[Auth] OTP request for non-allowlisted email: ${normalizedEmail}`);
+    // Check if email exists in admin_users table and is active
+    const { data: adminUser, error: userError } = await supabaseAdmin
+      .from('admin_users')
+      .select('id, email, is_active')
+      .eq('email', normalizedEmail)
+      .single();
+
+    if (userError || !adminUser) {
+      // Don't reveal if email is not found for security
+      console.log(`[Auth] OTP request for unknown email: ${normalizedEmail}`);
+      return NextResponse.json({ ok: true });
+    }
+
+    if (!adminUser.is_active) {
+      console.log(`[Auth] OTP request for inactive user: ${normalizedEmail}`);
       return NextResponse.json({ ok: true });
     }
 

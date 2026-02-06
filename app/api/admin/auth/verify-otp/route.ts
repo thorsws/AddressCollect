@@ -72,17 +72,40 @@ export async function POST(request: NextRequest) {
       .update({ used_at: new Date().toISOString() })
       .eq('id', otpRequest.id);
 
+    // Fetch user from admin_users table
+    const { data: user, error: userError } = await supabaseAdmin
+      .from('admin_users')
+      .select('id, email, name, role, is_active')
+      .eq('email', normalizedEmail)
+      .single();
+
+    if (userError || !user) {
+      console.error('[Auth] User not found in admin_users:', normalizedEmail);
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 401 }
+      );
+    }
+
+    if (!user.is_active) {
+      console.error('[Auth] User is inactive:', normalizedEmail);
+      return NextResponse.json(
+        { error: 'Account is inactive' },
+        { status: 403 }
+      );
+    }
+
     // Create session
     const clientIP = await getClientIP();
     const ipHash = hashIP(clientIP);
     const userAgent = await getUserAgent();
 
-    const sessionToken = await createSession(normalizedEmail, ipHash, userAgent);
+    const sessionToken = await createSession(normalizedEmail, user.id, ipHash, userAgent);
 
     // Set cookie
     await setSessionCookie(sessionToken);
 
-    console.log(`[Auth] Admin logged in: ${normalizedEmail}`);
+    console.log(`[Auth] Admin logged in: ${normalizedEmail} (${user.name}, ${user.role})`);
     return NextResponse.json({ ok: true });
 
   } catch (error) {

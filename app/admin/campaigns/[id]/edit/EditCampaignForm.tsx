@@ -8,7 +8,7 @@ interface Campaign {
   slug: string;
   title: string;
   description: string | null;
-  capacity_total: number;
+  capacity_total: number | null;
   is_active: boolean;
   require_email: boolean;
   require_email_verification: boolean;
@@ -20,17 +20,23 @@ interface Campaign {
   privacy_blurb: string | null;
   max_claims_per_email: number;
   max_claims_per_ip_per_day: number;
+  test_mode: boolean;
+  show_banner: boolean;
+  banner_url: string | null;
+  contact_email: string | null;
+  contact_text: string | null;
 }
 
 export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [unlimitedCapacity, setUnlimitedCapacity] = useState(!campaign.capacity_total);
 
   const [formData, setFormData] = useState({
     title: campaign.title,
     description: campaign.description || '',
-    capacity_total: campaign.capacity_total,
+    capacity_total: campaign.capacity_total || 100,
     is_active: campaign.is_active,
     require_email: campaign.require_email,
     require_email_verification: campaign.require_email_verification,
@@ -42,6 +48,11 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
     privacy_blurb: campaign.privacy_blurb || '',
     max_claims_per_email: campaign.max_claims_per_email,
     max_claims_per_ip_per_day: campaign.max_claims_per_ip_per_day,
+    test_mode: campaign.test_mode,
+    show_banner: campaign.show_banner,
+    banner_url: campaign.banner_url || '',
+    contact_email: campaign.contact_email || '',
+    contact_text: campaign.contact_text || 'If you have any questions, please email',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -53,7 +64,10 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
       const response = await fetch(`/api/admin/campaigns/${campaign.id}/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          capacity_total: unlimitedCapacity ? null : formData.capacity_total,
+        }),
       });
 
       if (!response.ok) {
@@ -140,16 +154,30 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Total Capacity *
+                  Total Capacity
                 </label>
-                <input
-                  type="number"
-                  required
-                  min="1"
-                  value={formData.capacity_total}
-                  onChange={(e) => setFormData({ ...formData, capacity_total: parseInt(e.target.value) })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <div className="flex items-center space-x-4">
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.capacity_total}
+                    onChange={(e) => setFormData({ ...formData, capacity_total: parseInt(e.target.value) || 100 })}
+                    disabled={unlimitedCapacity}
+                    className={`flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent ${unlimitedCapacity ? 'bg-gray-100 text-gray-400' : ''}`}
+                  />
+                  <label className="flex items-center whitespace-nowrap">
+                    <input
+                      type="checkbox"
+                      checked={unlimitedCapacity}
+                      onChange={(e) => setUnlimitedCapacity(e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">Unlimited (raffle mode)</span>
+                  </label>
+                </div>
+                {unlimitedCapacity && (
+                  <p className="text-xs text-blue-600 mt-1">No capacity limit - good for raffles and signups</p>
+                )}
               </div>
             </div>
           </div>
@@ -210,6 +238,16 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Show scarcity (remaining capacity)</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.test_mode}
+                  onChange={(e) => setFormData({ ...formData, test_mode: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Test mode (claims don&apos;t count toward capacity)</span>
               </label>
             </div>
           </div>
@@ -295,6 +333,82 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
                   />
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Contact Information */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Contact Email (optional)
+                </label>
+                <input
+                  type="email"
+                  value={formData.contact_email}
+                  onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                  placeholder="support@example.com"
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  If provided, this email will be shown on the campaign page
+                </p>
+              </div>
+
+              {formData.contact_email && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Contact Text
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.contact_text}
+                    onChange={(e) => setFormData({ ...formData, contact_text: e.target.value })}
+                    placeholder="If you have any questions, please email"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Preview: {formData.contact_text} <span className="text-blue-600">{formData.contact_email}</span>
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Preview Banner */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Preview Banner</h2>
+
+            <div className="space-y-3">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.show_banner}
+                  onChange={(e) => setFormData({ ...formData, show_banner: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show preview banner on campaign page</span>
+              </label>
+
+              {formData.show_banner && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Banner URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.banner_url}
+                    onChange={(e) => setFormData({ ...formData, banner_url: e.target.value })}
+                    placeholder="https://cognitivekin.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    We&apos;ll fetch Open Graph metadata from this URL to display as a preview card
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

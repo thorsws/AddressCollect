@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { canExportCampaign } from '@/lib/admin/permissions';
 
 export async function GET(
   request: NextRequest,
@@ -8,6 +9,14 @@ export async function GET(
 ) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
+
+  // Check permission to export
+  if (!canExportCampaign(admin.role)) {
+    return NextResponse.json(
+      { error: 'Forbidden - You do not have permission to export campaigns' },
+      { status: 403 }
+    );
+  }
 
   const { id } = await params;
 
@@ -43,6 +52,7 @@ export async function GET(
   const headers = [
     'Campaign Slug',
     'Status',
+    'Test Claim',
     'First Name',
     'Last Name',
     'Email',
@@ -63,6 +73,7 @@ export async function GET(
   const rows = claims?.map(claim => [
     campaign.slug,
     claim.status,
+    claim.is_test_claim ? 'Yes' : 'No',
     claim.first_name,
     claim.last_name,
     claim.email || '',

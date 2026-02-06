@@ -1,6 +1,10 @@
 import { redirect, notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import EnhancedClaimsTable from './EnhancedClaimsTable';
+import InviteCodesManager from './InviteCodesManager';
+import PreCreateClaimForm from './PreCreateClaimForm';
+import DeleteCampaignButton from './DeleteCampaignButton';
 
 export default async function CampaignDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -28,8 +32,16 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
     .eq('campaign_id', id)
     .order('created_at', { ascending: false });
 
-  const confirmedClaims = claims?.filter(c => c.status === 'confirmed') || [];
-  const pendingClaims = claims?.filter(c => c.status === 'pending') || [];
+  // Fetch invite codes if campaign requires them
+  let inviteCodes = [];
+  if (campaign.require_invite_code) {
+    const { data } = await supabaseAdmin
+      .from('invite_codes')
+      .select('*')
+      .eq('campaign_id', id)
+      .order('created_at', { ascending: false });
+    inviteCodes = data || [];
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -56,6 +68,9 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               >
                 Export CSV
               </a>
+              {admin.role === 'super_admin' && (
+                <DeleteCampaignButton campaignId={campaign.id} campaignTitle={campaign.title} />
+              )}
               <span className="text-sm text-gray-600">{admin.email}</span>
             </div>
           </div>
@@ -63,114 +78,22 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <p className="text-sm text-gray-600">Total Claims</p>
-              <p className="text-2xl font-bold text-gray-900">{claims?.length || 0}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Confirmed</p>
-              <p className="text-2xl font-bold text-green-600">{confirmedClaims.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600">{pendingClaims.length}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Capacity</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {confirmedClaims.length} / {campaign.capacity_total}
-              </p>
-            </div>
-          </div>
+        {/* Pre-create claim form - allows admin to create invite links */}
+        <div className="mb-6">
+          <PreCreateClaimForm campaignId={campaign.id} campaignSlug={campaign.slug} />
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">Claims</h2>
+        {campaign.require_invite_code && (
+          <div className="mb-6">
+            <InviteCodesManager campaignId={campaign.id} inviteCodes={inviteCodes} />
           </div>
-
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Address
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    City, Region
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Postal Code
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Country
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {claims?.map((claim) => (
-                  <tr key={claim.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded ${
-                          claim.status === 'confirmed'
-                            ? 'bg-green-100 text-green-800'
-                            : claim.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {claim.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.first_name} {claim.last_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {claim.email || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {claim.address1}
-                      {claim.address2 && <><br />{claim.address2}</>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.city}, {claim.region}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.postal_code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.country}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {new Date(claim.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {(!claims || claims.length === 0) && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No claims yet for this campaign.</p>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
+        <EnhancedClaimsTable
+          claims={claims || []}
+          capacity_total={campaign.capacity_total}
+          campaignSlug={campaign.slug}
+          userRole={admin.role}
+        />
       </main>
     </div>
   );

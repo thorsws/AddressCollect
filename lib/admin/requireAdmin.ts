@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getSessionToken, verifySession } from './session';
+import { Role } from './permissions';
 
 export interface AdminUser {
+  id: string;
   email: string;
+  name: string;
+  role: Role;
   sessionId: string;
 }
 
@@ -13,7 +17,7 @@ export interface AdminUser {
  * Usage in API routes:
  * const admin = await requireAdmin();
  * if (admin instanceof NextResponse) return admin;
- * // admin.email is now available
+ * // admin.id, admin.email, admin.name, admin.role are now available
  */
 export async function requireAdmin(): Promise<AdminUser | NextResponse> {
   // Get session token from cookie
@@ -26,27 +30,21 @@ export async function requireAdmin(): Promise<AdminUser | NextResponse> {
     );
   }
 
-  // Verify session
+  // Verify session and get user
   const session = await verifySession(sessionToken);
 
-  if (!session) {
+  if (!session || !session.user) {
     return NextResponse.json(
       { error: 'Unauthorized - Invalid or expired session' },
       { status: 401 }
     );
   }
 
-  // Check if email is still in allowlist
-  const allowlist = process.env.ADMIN_EMAIL_ALLOWLIST?.split(',').map(e => e.trim().toLowerCase()) || [];
-  if (!allowlist.includes(session.email.toLowerCase())) {
-    return NextResponse.json(
-      { error: 'Unauthorized - Access revoked' },
-      { status: 403 }
-    );
-  }
-
   return {
-    email: session.email,
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name,
+    role: session.user.role,
     sessionId: session.id,
   };
 }

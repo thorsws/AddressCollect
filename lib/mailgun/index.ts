@@ -149,3 +149,97 @@ If you didn't request this, please ignore this email.
     throw new Error('Failed to send verification email');
   }
 }
+
+/**
+ * Send invite email to new admin user
+ * Used when a super admin invites a new user
+ */
+export async function sendInviteEmail(
+  email: string,
+  name: string,
+  role: string
+): Promise<void> {
+  const mg = getMailgunClient();
+  const domain = process.env.MAILGUN_DOMAIN!;
+  const fromEmail = process.env.MAILGUN_FROM_EMAIL || `noreply@${domain}`;
+  const appUrl = process.env.APP_BASE_URL || 'http://localhost:3000';
+  const loginUrl = `${appUrl}/admin/login`;
+
+  const roleDisplay = role === 'super_admin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Viewer';
+
+  const subject = 'Welcome to AddressCollect Admin';
+  const text = `
+Hi ${name},
+
+You've been invited to join AddressCollect as an ${roleDisplay}.
+
+To get started, visit the admin login page:
+${loginUrl}
+
+Enter your email address (${email}) and you'll receive a one-time login code.
+
+Your role: ${roleDisplay}
+${role === 'super_admin' ? '- Full access, can manage users and all campaigns' : ''}
+${role === 'admin' ? '- Can create campaigns and edit your own campaigns' : ''}
+${role === 'viewer' ? '- Read-only access to all campaigns' : ''}
+
+If you have any questions, please contact the administrator who invited you.
+
+Welcome aboard!
+  `.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px; margin: 20px 0;">
+    <h2 style="color: #1a1a1a; margin-top: 0;">Welcome to AddressCollect</h2>
+    <p>Hi ${name},</p>
+    <p>You've been invited to join AddressCollect as an <strong>${roleDisplay}</strong>.</p>
+
+    <div style="margin: 30px 0; text-align: center;">
+      <a href="${loginUrl}" style="display: inline-block; background-color: #4a90e2; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 6px; font-weight: bold;">
+        Login to Admin
+      </a>
+    </div>
+
+    <p>To get started:</p>
+    <ol style="color: #666;">
+      <li>Click the button above to visit the admin login page</li>
+      <li>Enter your email address: <strong>${email}</strong></li>
+      <li>You'll receive a one-time login code</li>
+    </ol>
+
+    <div style="background-color: #ffffff; border-left: 4px solid #4a90e2; padding: 15px; margin: 20px 0;">
+      <p style="margin: 0; font-size: 14px;"><strong>Your Role: ${roleDisplay}</strong></p>
+      ${role === 'super_admin' ? '<p style="margin: 5px 0 0 0; font-size: 13px; color: #666;">Full access, can manage users and all campaigns</p>' : ''}
+      ${role === 'admin' ? '<p style="margin: 5px 0 0 0; font-size: 13px; color: #666;">Can create campaigns and edit your own campaigns</p>' : ''}
+      ${role === 'viewer' ? '<p style="margin: 5px 0 0 0; font-size: 13px; color: #666;">Read-only access to all campaigns</p>' : ''}
+    </div>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+    <p style="color: #999; font-size: 12px;">If you have any questions, please contact the administrator who invited you.</p>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  try {
+    await mg.messages.create(domain, {
+      from: fromEmail,
+      to: [email],
+      subject,
+      text,
+      html,
+    });
+
+    console.log(`[Mailgun] Invite email sent to ${email} (${role})`);
+  } catch (error) {
+    console.error('[Mailgun] Failed to send invite email:', error);
+    throw new Error('Failed to send invite email');
+  }
+}

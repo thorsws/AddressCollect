@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import ClaimsFilter from './ClaimsFilter';
 
 export default async function AllAddressesPage() {
   const admin = await requireAdmin();
@@ -24,6 +25,9 @@ export default async function AllAddressesPage() {
   const totalClaims = claims?.length || 0;
   const confirmedClaims = claims?.filter(c => c.status === 'confirmed').length || 0;
   const pendingClaims = claims?.filter(c => c.status === 'pending').length || 0;
+  const preCreatedClaims = claims?.filter(c => c.claim_token && !c.address1).length || 0;
+  const shippedClaims = claims?.filter(c => c.shipped_at).length || 0;
+  const testClaims = claims?.filter(c => c.is_test_claim).length || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -58,7 +62,7 @@ export default async function AllAddressesPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
             <div>
               <p className="text-sm text-gray-600">Total Addresses</p>
               <p className="text-2xl font-bold text-gray-900">{totalClaims}</p>
@@ -71,6 +75,20 @@ export default async function AllAddressesPage() {
               <p className="text-sm text-gray-600">Pending</p>
               <p className="text-2xl font-bold text-yellow-600">{pendingClaims}</p>
             </div>
+            <div>
+              <p className="text-sm text-gray-600">Pre-Created</p>
+              <p className="text-2xl font-bold text-orange-600">{preCreatedClaims}</p>
+              <p className="text-xs text-gray-500">Awaiting submission</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Test</p>
+              <p className="text-2xl font-bold text-purple-600">{testClaims}</p>
+              <p className="text-xs text-gray-500">Not counted</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Shipped</p>
+              <p className="text-2xl font-bold text-blue-600">{shippedClaims}</p>
+            </div>
           </div>
         </div>
 
@@ -79,94 +97,7 @@ export default async function AllAddressesPage() {
             <h2 className="text-lg font-semibold text-gray-900">All Claims Across Campaigns</h2>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Campaign
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Email
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Address
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    City, Region
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Postal Code
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Country
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {claims?.map((claim: any) => (
-                  <tr key={claim.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      <div>
-                        <div className="font-medium text-gray-900">{claim.campaigns?.title}</div>
-                        <div className="text-gray-500">/{claim.campaigns?.slug}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded ${
-                          claim.status === 'confirmed'
-                            ? 'bg-green-100 text-green-800'
-                            : claim.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {claim.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.first_name} {claim.last_name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {claim.email || '-'}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {claim.address1}
-                      {claim.address2 && <><br />{claim.address2}</>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.city}, {claim.region}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.postal_code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {claim.country}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {new Date(claim.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {(!claims || claims.length === 0) && (
-              <div className="text-center py-12">
-                <p className="text-gray-500">No addresses collected yet.</p>
-              </div>
-            )}
-          </div>
+          <ClaimsFilter claims={claims || []} />
         </div>
       </main>
     </div>
