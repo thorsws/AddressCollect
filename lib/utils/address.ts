@@ -29,6 +29,30 @@ export function generateAddressFingerprint(
 }
 
 /**
+ * Generate location fingerprint (address only, without person name)
+ * Used to count how many different people are at the same address
+ */
+export function generateLocationFingerprint(
+  address1: string,
+  city: string,
+  region: string,
+  postalCode: string,
+  country: string
+): string {
+  // Normalize all fields (excluding name)
+  const normalized = [
+    address1.trim().toLowerCase().replace(/[^\w\s]/g, ''), // Remove punctuation
+    city.trim().toLowerCase(),
+    region.trim().toLowerCase(),
+    postalCode.trim().replace(/\s/g, ''), // Remove spaces from postal code
+    country.trim().toUpperCase(),
+  ].join('|');
+
+  // Create SHA-256 hash
+  return createHash('sha256').update(normalized).digest('hex');
+}
+
+/**
  * Normalize email for deduplication
  */
 export function normalizeEmail(email: string): string {

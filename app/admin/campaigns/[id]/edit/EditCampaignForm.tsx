@@ -28,6 +28,7 @@ interface Campaign {
   privacy_blurb: string | null;
   max_claims_per_email: number;
   max_claims_per_ip_per_day: number;
+  max_claims_per_address: number;
   test_mode: boolean;
   show_banner: boolean;
   banner_url: string | null;
@@ -78,6 +79,7 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
     privacy_blurb: campaign.privacy_blurb || '',
     max_claims_per_email: campaign.max_claims_per_email,
     max_claims_per_ip_per_day: campaign.max_claims_per_ip_per_day,
+    max_claims_per_address: campaign.max_claims_per_address || 1,
     test_mode: campaign.test_mode,
     show_banner: campaign.show_banner,
     banner_url: campaign.banner_url || '',
@@ -472,7 +474,7 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Max claims per email
@@ -497,6 +499,22 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                     onChange={(e) => setFormData({ ...formData, max_claims_per_ip_per_day: parseInt(e.target.value) })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Max people per address
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.max_claims_per_address}
+                    onChange={(e) => setFormData({ ...formData, max_claims_per_address: parseInt(e.target.value) })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Roommates, family members, etc.
+                  </p>
                 </div>
               </div>
             </div>

@@ -59,6 +59,7 @@ export async function PUT(
         privacy_blurb: data.privacy_blurb || null,
         max_claims_per_email: parseInt(data.max_claims_per_email) || 1,
         max_claims_per_ip_per_day: parseInt(data.max_claims_per_ip_per_day) || 5,
+        max_claims_per_address: parseInt(data.max_claims_per_address) || 1,
         test_mode: data.test_mode === true,
         show_banner: data.show_banner === true,
         banner_url: data.banner_url || null,

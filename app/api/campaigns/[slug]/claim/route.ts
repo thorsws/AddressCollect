@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { generateAddressFingerprint, normalizeEmail } from '@/lib/utils/address';
+import { generateAddressFingerprint, generateLocationFingerprint, normalizeEmail } from '@/lib/utils/address';
 import { hashIP, generateSessionToken, hashValue } from '@/lib/crypto/hash';
 import { getClientIP, getUserAgent } from '@/lib/utils/request';
 import { sendClaimVerificationEmail } from '@/lib/mailgun';
@@ -59,7 +59,7 @@ async function handlePreCreatedClaim(
   const ipHash = hashIP(clientIP);
   const userAgent = await getUserAgent();
 
-  // Generate address fingerprint
+  // Generate address fingerprints
   const addressFingerprint = generateAddressFingerprint(
     firstName,
     lastName,
@@ -70,20 +70,48 @@ async function handlePreCreatedClaim(
     country
   );
 
-  // Check for duplicate address in other claims
-  const { data: duplicateAddress } = await supabaseAdmin
+  const locationFingerprint = generateLocationFingerprint(
+    address1,
+    city,
+    region,
+    postalCode,
+    country
+  );
+
+  // Check if another person with same name at same address has already claimed
+  const { data: duplicatePerson } = await supabaseAdmin
     .from('claims')
     .select('id')
     .eq('campaign_id', campaign.id)
     .eq('address_fingerprint', addressFingerprint)
-    .neq('id', existingClaim.id) // Exclude the current claim
+    .neq('id', existingClaim.id)
     .single();
 
-  if (duplicateAddress) {
+  if (duplicatePerson) {
     return NextResponse.json(
-      { error: 'This address has already been claimed for this campaign' },
+      { error: 'This person has already submitted a claim from this address' },
       { status: 400 }
     );
+  }
+
+  // Check if address has reached max number of different people
+  if (campaign.max_claims_per_address && campaign.max_claims_per_address > 0) {
+    const { count: addressCount } = await supabaseAdmin
+      .from('claims')
+      .select('*', { count: 'exact', head: true })
+      .eq('campaign_id', campaign.id)
+      .eq('location_fingerprint', locationFingerprint)
+      .neq('id', existingClaim.id); // Exclude the current claim
+
+    if (addressCount && addressCount >= campaign.max_claims_per_address) {
+      const limit = campaign.max_claims_per_address;
+      return NextResponse.json(
+        {
+          error: `This address has reached the maximum of ${limit} ${limit === 1 ? 'person' : 'people'} for this campaign`
+        },
+        { status: 400 }
+      );
+    }
   }
 
   // Determine final status
@@ -108,6 +136,7 @@ async function handlePreCreatedClaim(
       invite_code: inviteCode ? inviteCode.toUpperCase() : null,
       email_normalized: email ? normalizeEmail(email) : (existingClaim.email ? normalizeEmail(existingClaim.email) : null),
       address_fingerprint: addressFingerprint,
+      location_fingerprint: locationFingerprint,
       ip_hash: ipHash,
       user_agent: userAgent,
       consent_given: consent === true,
@@ -331,7 +360,8 @@ export async function POST(
       );
     }
 
-    // 8. Generate address fingerprint
+    // 8. Generate address fingerprints
+    // address_fingerprint includes name - prevents same person from claiming twice
     const addressFingerprint = generateAddressFingerprint(
       firstName,
       lastName,
@@ -342,7 +372,16 @@ export async function POST(
       country
     );
 
-    // 9. Check for duplicate address
+    // location_fingerprint excludes name - counts different people at same address
+    const locationFingerprint = generateLocationFingerprint(
+      address1,
+      city,
+      region,
+      postalCode,
+      country
+    );
+
+    // 9a. Check if this exact person (name + address) has already claimed
     const { data: existingClaim } = await supabaseAdmin
       .from('claims')
       .select('id')
@@ -352,9 +391,28 @@ export async function POST(
 
     if (existingClaim) {
       return NextResponse.json(
-        { error: 'This address has already been claimed for this campaign' },
+        { error: 'This person has already submitted a claim from this address' },
         { status: 400 }
       );
+    }
+
+    // 9b. Check if address has reached max number of different people
+    if (campaign.max_claims_per_address && campaign.max_claims_per_address > 0) {
+      const { count: addressCount } = await supabaseAdmin
+        .from('claims')
+        .select('*', { count: 'exact', head: true })
+        .eq('campaign_id', campaign.id)
+        .eq('location_fingerprint', locationFingerprint);
+
+      if (addressCount && addressCount >= campaign.max_claims_per_address) {
+        const limit = campaign.max_claims_per_address;
+        return NextResponse.json(
+          {
+            error: `This address has reached the maximum of ${limit} ${limit === 1 ? 'person' : 'people'} for this campaign`
+          },
+          { status: 400 }
+        );
+      }
     }
 
     // 10. Check for duplicate email if provided
@@ -399,6 +457,7 @@ export async function POST(
         invite_code: inviteCode ? inviteCode.toUpperCase() : null,
         email_normalized: email ? normalizeEmail(email) : null,
         address_fingerprint: addressFingerprint,
+        location_fingerprint: locationFingerprint,
         ip_hash: ipHash,
         user_agent: userAgent,
         consent_given: consent === true,
