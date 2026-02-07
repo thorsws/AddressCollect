@@ -194,6 +194,28 @@ function normalizeRow(rawRow: any): CsvRowWithDate | null {
           postalCode = addressParts[3].trim();
         }
       }
+    } else if (addressParts.length === 2) {
+      // Format: "street city, state zip" (only one comma)
+      // Try to parse "street city" part by finding last word as city
+      const firstPart = addressParts[0]; // e.g., "179 Winter Drive Worthington"
+      const secondPart = addressParts[1]; // e.g., "OH 43085"
+
+      // Parse second part for state and zip
+      const stateZipMatch = secondPart.match(/^([A-Za-z\s]+?)\s+(\d{5}(?:-\d{4})?)$/);
+      if (stateZipMatch) {
+        region = stateZipMatch[1].trim();
+        postalCode = stateZipMatch[2];
+
+        // Split first part to separate street from city (last word is city)
+        const firstPartWords = firstPart.trim().split(/\s+/);
+        if (firstPartWords.length >= 2) {
+          city = firstPartWords[firstPartWords.length - 1]; // Last word is city
+          address1 = firstPartWords.slice(0, -1).join(' '); // Everything else is street
+        } else {
+          // If only one word, use it as street and leave city empty (will fail validation)
+          address1 = firstPart;
+        }
+      }
     }
   }
 
