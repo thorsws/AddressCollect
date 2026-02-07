@@ -71,7 +71,10 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
 
           {/* Bottom row: Campaign title | Action buttons */}
           <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">{campaign.title}</h1>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{campaign.internal_title}</h1>
+              <p className="text-sm text-blue-600 mt-1">Public: {campaign.title}</p>
+            </div>
             <div className="flex items-center space-x-3">
               <PreviewCampaignButton campaignSlug={campaign.slug} />
               <a
@@ -96,32 +99,44 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Campaign Info */}
-        {(campaign.starts_at || campaign.ends_at || campaign.created_by) && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex flex-wrap gap-6 text-sm">
-              {campaign.created_by && (
-                <div>
-                  <span className="font-medium text-blue-800">Created by:</span>{' '}
-                  <span className="text-blue-700">
-                    {campaign.creator?.name || campaign.creator?.email || 'Unknown'}
-                  </span>
-                </div>
-              )}
-              {campaign.starts_at && (
-                <div>
-                  <span className="font-medium text-blue-800">Starts:</span>{' '}
-                  <span className="text-blue-700">{new Date(campaign.starts_at).toLocaleString()}</span>
-                </div>
-              )}
-              {campaign.ends_at && (
-                <div>
-                  <span className="font-medium text-blue-800">Ends:</span>{' '}
-                  <span className="text-blue-700">{new Date(campaign.ends_at).toLocaleString()}</span>
-                </div>
-              )}
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex flex-wrap gap-6 text-sm">
+            <div>
+              <span className="font-medium text-blue-800">Internal Title:</span>{' '}
+              <span className="text-blue-700">{campaign.internal_title}</span>
             </div>
+            <div>
+              <span className="font-medium text-blue-800">Slug:</span>{' '}
+              <span className="text-blue-700">/c/{campaign.slug}</span>
+            </div>
+            {campaign.created_by && (
+              <div>
+                <span className="font-medium text-blue-800">Created by:</span>{' '}
+                <span className="text-blue-700">
+                  {campaign.creator?.name || campaign.creator?.email || 'Unknown'}
+                </span>
+              </div>
+            )}
+            {campaign.starts_at && (
+              <div>
+                <span className="font-medium text-blue-800">Starts:</span>{' '}
+                <span className="text-blue-700">{new Date(campaign.starts_at).toLocaleString()}</span>
+              </div>
+            )}
+            {campaign.ends_at && (
+              <div>
+                <span className="font-medium text-blue-800">Ends:</span>{' '}
+                <span className="text-blue-700">{new Date(campaign.ends_at).toLocaleString()}</span>
+              </div>
+            )}
           </div>
-        )}
+          {campaign.notes && (
+            <div className="mt-4 pt-4 border-t border-blue-200">
+              <span className="font-medium text-blue-800">Internal Notes:</span>
+              <p className="text-blue-700 text-sm mt-1 whitespace-pre-wrap">{campaign.notes}</p>
+            </div>
+          )}
+        </div>
 
         {/* QR Code Section */}
         <div className="mb-6">

@@ -6,6 +6,7 @@ import Link from 'next/link';
 interface Campaign {
   id: string;
   title: string;
+  internal_title: string;
   slug: string;
   is_active: boolean;
   test_mode: boolean;
@@ -15,6 +16,7 @@ interface Campaign {
   creatorEmail: string | null;
   confirmedCount: number;
   pendingCount: number;
+  notes: string | null;
 }
 
 interface Props {
@@ -81,7 +83,32 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
           return (
           <div key={campaign.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
             <div className="mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.title}</h3>
+              <div className="flex items-start gap-2 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 flex-1">{campaign.internal_title}</h3>
+                {campaign.notes && (
+                  <div className="group relative">
+                    <svg
+                      className="w-5 h-5 text-blue-500 cursor-help"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div className="hidden group-hover:block absolute z-10 w-64 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg -right-2 top-6">
+                      <div className="font-semibold mb-1">Internal Notes:</div>
+                      <div className="whitespace-pre-wrap">{campaign.notes}</div>
+                      <div className="absolute -top-1 right-3 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="flex gap-1.5 mb-2">
                 <span
                   className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
@@ -117,7 +144,7 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
                 href={`/admin/campaigns/${campaign.id}`}
                 className="flex-1 text-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
               >
-                View Claims
+                View/Edit Campaign
               </a>
               <a
                 href={`/c/${campaign.slug}`}

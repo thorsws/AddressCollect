@@ -87,7 +87,7 @@ export default async function AllAddressesPage() {
               <p className="text-xs text-gray-500">Not counted</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Shipped</p>
+              <p className="text-sm text-gray-600">Sent</p>
               <p className="text-2xl font-bold text-blue-600">{shippedClaims}</p>
             </div>
           </div>

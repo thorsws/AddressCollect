@@ -22,5 +22,12 @@ export default async function EditCampaign({ params }: { params: Promise<{ id: s
     redirect('/admin');
   }
 
-  return <EditCampaignForm campaign={campaign} />;
+  // Fetch questions for this campaign
+  const { data: questions } = await supabaseAdmin
+    .from('campaign_questions')
+    .select('*')
+    .eq('campaign_id', id)
+    .order('display_order', { ascending: true });
+
+  return <EditCampaignForm campaign={campaign} initialQuestions={questions || []} />;
 }

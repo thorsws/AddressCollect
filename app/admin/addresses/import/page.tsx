@@ -139,7 +139,7 @@ export default function ImportAddressesPage() {
               <li><strong>State/region</strong> (required)</li>
               <li><strong>Zip/postalCode</strong> (required)</li>
               <li><strong>Country</strong> (defaults to US if missing)</li>
-              <li><strong>Sent to Charlie Date?</strong> or <strong>Shipped Date</strong> (optional, e.g. &quot;Jan 30&quot; or &quot;1/30/2024&quot;)</li>
+              <li><strong>Sent to Charlie Date?</strong> or <strong>Sent Date</strong> (optional, e.g. &quot;Jan 30&quot; or &quot;1/30/2024&quot;)</li>
             </ul>
             <p className="text-blue-800 text-sm mt-2">
               <strong>Note:</strong> Duplicate addresses across ALL campaigns will be skipped automatically.
@@ -182,18 +182,18 @@ export default function ImportAddressesPage() {
                 required
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="confirmed">Confirmed (not yet shipped)</option>
-                <option value="shipped">Shipped (already sent)</option>
+                <option value="confirmed">Confirmed (not yet sent)</option>
+                <option value="shipped">Sent (already sent)</option>
               </select>
               <p className="mt-1 text-sm text-gray-500">
-                Use &quot;Shipped&quot; for historical addresses that have already been fulfilled
+                Use &quot;Sent&quot; for historical addresses that have already been fulfilled
               </p>
             </div>
 
             {status === 'shipped' && (
               <div>
                 <label htmlFor="defaultShippedDate" className="block text-sm font-medium text-gray-700 mb-1">
-                  Default Shipped Date (Optional)
+                  Default Sent Date (Optional)
                 </label>
                 <input
                   type="date"
@@ -249,6 +249,26 @@ export default function ImportAddressesPage() {
                 </p>
               )}
             </div>
+
+            {loading && (
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0">
+                    <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-blue-900 text-sm font-semibold">Processing CSV file...</p>
+                    <p className="text-blue-700 text-xs mt-1">Parsing addresses and checking for duplicates. This may take a moment.</p>
+                  </div>
+                </div>
+                <div className="mt-3 w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                  <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4">

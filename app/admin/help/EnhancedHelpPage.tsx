@@ -202,14 +202,14 @@ export default function EnhancedHelpPage() {
                 <h3 className="text-lg font-semibold text-gray-800 mt-4">Claim Statuses</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li><strong className="text-yellow-600">Pending</strong> - Awaiting email verification</li>
-                  <li><strong className="text-green-600">Confirmed</strong> - Ready to ship</li>
+                  <li><strong className="text-green-600">Confirmed</strong> - Ready to send</li>
                   <li><strong className="text-red-600">Rejected</strong> - Marked as invalid</li>
-                  <li><strong className="text-blue-600">Shipped</strong> - Item has been sent (with date)</li>
+                  <li><strong className="text-blue-600">Sent</strong> - Item has been sent (with date)</li>
                 </ul>
 
                 <h3 className="text-lg font-semibold text-gray-800 mt-4">Actions</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li><strong>Mark as Shipped</strong> - Track which items have been sent with date</li>
+                  <li><strong>Mark as Sent</strong> - Track which items have been sent with date</li>
                   <li><strong>Reject</strong> - Mark invalid claims</li>
                   <li><strong>Add Notes</strong> - Internal notes for your reference</li>
                   <li><strong>Copy Address</strong> - Quick copy for shipping labels</li>
@@ -224,12 +224,12 @@ export default function EnhancedHelpPage() {
                 <p>On the &quot;All Addresses&quot; page, you can filter claims by:</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li><strong>Status</strong> - Confirmed, Pending, Rejected</li>
-                  <li><strong>Shipped</strong> - Shipped Only, Not Shipped, All</li>
+                  <li><strong>Sent</strong> - Sent Only, Not Sent, All</li>
                   <li><strong>Type</strong> - Pre-Created Only, Regular Only, All</li>
                   <li><strong>Test Claims</strong> - Toggle to show/hide test data</li>
                 </ul>
                 <p className="mt-3">
-                  Combine filters to find exactly what you need, like &quot;Confirmed + Not Shipped&quot; to see addresses ready to ship.
+                  Combine filters to find exactly what you need, like &quot;Confirmed + Not Sent&quot; to see addresses ready to send.
                 </p>
               </div>
             </section>
@@ -244,8 +244,8 @@ export default function EnhancedHelpPage() {
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li><strong>Flexible CSV format</strong> - Handles &quot;Full Name&quot;, &quot;Street Address 1/2&quot;, &quot;State&quot;, &quot;Zip&quot;, etc.</li>
                   <li><strong>Campaign selection</strong> - Choose which campaign to import into</li>
-                  <li><strong>Status selection</strong> - Mark as Confirmed or Shipped</li>
-                  <li><strong>Shipped date support</strong> - Reads &quot;Sent to Charlie Date?&quot; column or use default date</li>
+                  <li><strong>Status selection</strong> - Mark as Confirmed or Sent</li>
+                  <li><strong>Sent date support</strong> - Reads &quot;Sent to Charlie Date?&quot; column or use default date</li>
                   <li><strong>Skip header rows</strong> - Configure how many rows to skip (default 3)</li>
                   <li><strong>Auto-deduplication</strong> - Skips duplicates across ALL campaigns</li>
                 </ul>

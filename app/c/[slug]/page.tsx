@@ -114,13 +114,19 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
   // Get current claim count for scarcity
   let claimCount = 0;
   if (campaign.show_scarcity) {
-    const { count } = await supabaseAdmin
+    // In test mode, count test claims. In production, exclude them.
+    const query = supabaseAdmin
       .from('claims')
       .select('*', { count: 'exact', head: true })
       .eq('campaign_id', campaign.id)
-      .eq('status', 'confirmed')
-      .eq('is_test_claim', false);
+      .eq('status', 'confirmed');
 
+    // Only exclude test claims if campaign is NOT in test mode
+    if (!campaign.test_mode) {
+      query.eq('is_test_claim', false);
+    }
+
+    const { count } = await query;
     claimCount = count || 0;
   }
 

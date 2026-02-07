@@ -22,9 +22,9 @@ export async function POST(request: NextRequest) {
     const data = await request.json();
 
     // Validate required fields (capacity_total is optional - null/0 means unlimited)
-    if (!data.slug || !data.title) {
+    if (!data.slug || !data.title || !data.internal_title) {
       return NextResponse.json(
-        { error: 'Missing required fields: slug, title' },
+        { error: 'Missing required fields: slug, title, internal_title' },
         { status: 400 }
       );
     }
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       .insert({
         slug: data.slug,
         title: data.title,
+        internal_title: data.internal_title,
         description: data.description || null,
         capacity_total: data.capacity_total ? parseInt(data.capacity_total) : 0,
         is_active: data.is_active !== false,
@@ -66,6 +67,8 @@ export async function POST(request: NextRequest) {
         show_banner: data.show_banner === true,
         banner_url: data.banner_url || null,
         show_logo: data.show_logo === true,
+        enable_questions: data.enable_questions === true,
+        notes: data.notes || null,
         created_by: admin.id,
         updated_by: admin.id,
       })

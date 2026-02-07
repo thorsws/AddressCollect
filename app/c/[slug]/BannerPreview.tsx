@@ -8,6 +8,7 @@ interface BannerPreviewProps {
 /**
  * Banner Preview Component
  * Fetches and displays Open Graph metadata from a URL as a clickable preview card
+ * Opens in a new tab so users don't lose their place on the form
  * Server component - fetches data at build/request time
  */
 export default async function BannerPreview({ url }: BannerPreviewProps) {
@@ -46,7 +47,7 @@ export default async function BannerPreview({ url }: BannerPreviewProps) {
             </p>
           )}
           <p className="text-indigo-500 text-xs mt-2 flex items-center">
-            <span>Learn more</span>
+            <span>Learn more (opens in new tab)</span>
             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
             </svg>

@@ -27,13 +27,15 @@ export default async function AdminDashboard() {
         .from('claims')
         .select('*', { count: 'exact', head: true })
         .eq('campaign_id', campaign.id)
-        .eq('status', 'confirmed');
+        .eq('status', 'confirmed')
+        .eq('is_test_claim', false);
 
       const { count: pendingCount } = await supabaseAdmin
         .from('claims')
         .select('*', { count: 'exact', head: true })
         .eq('campaign_id', campaign.id)
-        .eq('status', 'pending');
+        .eq('status', 'pending')
+        .eq('is_test_claim', false);
 
       return {
         ...campaign,

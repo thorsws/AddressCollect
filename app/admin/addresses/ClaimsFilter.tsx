@@ -80,7 +80,7 @@ export default function ClaimsFilter({ claims }: Props) {
       'Postal Code',
       'Country',
       'Created Date',
-      'Sent Date (Pre-Order)',
+      'Sent Date',
       'Is Test',
       'Is Pre-Created'
     ];
@@ -155,15 +155,15 @@ export default function ClaimsFilter({ claims }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
-          <label className="text-sm font-medium text-gray-700">Shipped:</label>
+          <label className="text-sm font-medium text-gray-700">Sent:</label>
           <select
             value={shippedFilter}
             onChange={(e) => setShippedFilter(e.target.value)}
             className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All</option>
-            <option value="shipped">Shipped Only</option>
-            <option value="not-shipped">Not Shipped</option>
+            <option value="shipped">Sent Only</option>
+            <option value="not-shipped">Not Sent</option>
           </select>
         </div>
 
@@ -233,10 +233,10 @@ export default function ClaimsFilter({ claims }: Props) {
                 Postal
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Created
+                Sent
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Sent (Pre-Order)
+                Date
               </th>
             </tr>
           </thead>
@@ -279,11 +279,6 @@ export default function ClaimsFilter({ claims }: Props) {
                           PRE-CREATED
                         </span>
                       )}
-                      {claim.shipped_at && (
-                        <span className="px-2 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800 inline-block w-fit">
-                          SHIPPED
-                        </span>
-                      )}
                     </div>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -308,11 +303,21 @@ export default function ClaimsFilter({ claims }: Props) {
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isPreCreated ? '-' : claim.postal_code}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {new Date(claim.created_at).toLocaleDateString()}
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    {!isPreCreated && claim.shipped_at && (
+                      <span className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
+                        ✓ Sent
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {claim.shipped_at ? new Date(claim.shipped_at).toLocaleDateString() : '-'}
+                    {!isPreCreated && claim.shipped_at && (
+                      new Date(claim.shipped_at).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })
+                    )}
                   </td>
                 </tr>
               );

@@ -16,12 +16,13 @@ interface Campaign {
   show_banner: boolean;
   banner_url: string | null;
   kiosk_mode: boolean;
+  questions_intro_text: string | null;
 }
 
 interface Question {
   id: string;
   question_text: string;
-  question_type: 'text' | 'multiple_choice';
+  question_type: 'text' | 'multiple_choice' | 'checkboxes';
   is_required: boolean;
   options: string[] | null;
 }
@@ -65,7 +66,7 @@ interface Props {
 
 export default function CampaignForm({ campaign, questions = [] }: Props) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+  const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -93,7 +94,12 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
 
     // Validate required questions
     for (const q of questions) {
-      if (q.is_required && !answers[q.id]?.trim()) {
+      const answer = answers[q.id];
+      const isEmpty = Array.isArray(answer)
+        ? answer.length === 0
+        : !answer?.trim();
+
+      if (q.is_required && isEmpty) {
         setError(`Please answer: ${q.question_text}`);
         setLoading(false);
         return;
@@ -369,7 +375,10 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
       {/* Custom Questions */}
       {questions.length > 0 && (
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Questions</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Help Us Learn More</h3>
+          {campaign.questions_intro_text && (
+            <p className="text-gray-600 text-sm mb-4">{campaign.questions_intro_text}</p>
+          )}
           <div className="space-y-4">
             {questions.map((q) => (
               <div key={q.id}>
@@ -379,11 +388,11 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                 {q.question_type === 'text' ? (
                   <input
                     type="text"
-                    value={answers[q.id] || ''}
+                    value={(answers[q.id] as string) || ''}
                     onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                ) : (
+                ) : q.question_type === 'multiple_choice' ? (
                   <div className="space-y-2">
                     {q.options?.map((option) => (
                       <label key={option} className="flex items-center">
@@ -398,6 +407,30 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                         <span className="ml-2 text-gray-700">{option}</span>
                       </label>
                     ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {q.options?.map((option) => {
+                      const selectedOptions = (answers[q.id] as string[]) || [];
+                      return (
+                        <label key={option} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            value={option}
+                            checked={selectedOptions.includes(option)}
+                            onChange={(e) => {
+                              const current = (answers[q.id] as string[]) || [];
+                              const updated = e.target.checked
+                                ? [...current, option]
+                                : current.filter(o => o !== option);
+                              setAnswers({ ...answers, [q.id]: updated });
+                            }}
+                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                          />
+                          <span className="ml-2 text-gray-700">{option}</span>
+                        </label>
+                      );
+                    })}
                   </div>
                 )}
               </div>

@@ -55,10 +55,19 @@ function parseCsvLine(line: string): string[] {
 
   for (let j = 0; j < line.length; j++) {
     const char = line[j];
+    const nextChar = line[j + 1];
 
     if (char === '"') {
-      insideQuotes = !insideQuotes;
+      // Handle escaped quotes ("") - convert to single quote
+      if (insideQuotes && nextChar === '"') {
+        currentValue += '"';
+        j++; // Skip the next quote
+      } else {
+        // Toggle quote state, but don't add the quote to the value
+        insideQuotes = !insideQuotes;
+      }
     } else if (char === ',' && !insideQuotes) {
+      // End of field
       values.push(currentValue.trim());
       currentValue = '';
     } else {
@@ -193,48 +202,98 @@ function normalizeRow(rawRow: any): NormalizeResult {
   let postalCode = rawRow.postalCode || rawRow.Zip || rawRow.zip || rawRow.PostalCode || '';
   let country = rawRow.country || rawRow.Country || 'US'; // Default to US
 
-  // If city is missing but address1 has commas, try to parse full address from address1
-  if (!city && address1 && address1.includes(',')) {
-    const addressParts = address1.split(',').map((s: string) => s.trim());
+  // If city is missing, try to parse full address from address1
+  if (!city && address1) {
+    // Strategy 1: Address has commas - split and parse
+    if (address1.includes(',')) {
+      const addressParts = address1.split(',').map((s: string) => s.trim());
 
-    if (addressParts.length >= 3) {
-      // Format: "street, city, state zip" or "street, city state zip"
-      address1 = addressParts[0];
-      city = addressParts[1];
+      if (addressParts.length >= 3) {
+        // Format: "street, city, state zip" or "street, city state zip"
+        address1 = addressParts[0];
+        city = addressParts[1];
 
-      // Parse "state zip" or "state, zip"
-      const lastPart = addressParts[2];
-      const stateZipMatch = lastPart.match(/^([A-Za-z\s]+?)\s+(\d{5}(?:-\d{4})?)$/);
-      if (stateZipMatch) {
-        region = stateZipMatch[1].trim();
-        postalCode = stateZipMatch[2];
-      } else {
-        // Maybe it's just state, and zip is in next part
-        region = lastPart;
-        if (addressParts[3]) {
-          postalCode = addressParts[3].trim();
+        // Parse "state zip" or "state, zip"
+        const lastPart = addressParts[2];
+        const stateZipMatch = lastPart.match(/^([A-Za-z\s]+?)\s+(\d{5}(?:-\d{4})?)$/);
+        if (stateZipMatch) {
+          region = stateZipMatch[1].trim();
+          postalCode = stateZipMatch[2];
+        } else {
+          // Maybe it's just state, and zip is in next part
+          region = lastPart;
+          if (addressParts[3]) {
+            postalCode = addressParts[3].trim();
+          }
+        }
+      } else if (addressParts.length === 2) {
+        // Format: "street city, state zip" (only one comma)
+        // Try to parse "street city" part by finding last word as city
+        const firstPart = addressParts[0]; // e.g., "179 Winter Drive Worthington"
+        const secondPart = addressParts[1]; // e.g., "OH 43085"
+
+        // Parse second part for state and zip
+        const stateZipMatch = secondPart.match(/^([A-Za-z\s]+?)\s+(\d{5}(?:-\d{4})?)$/);
+        if (stateZipMatch) {
+          region = stateZipMatch[1].trim();
+          postalCode = stateZipMatch[2];
+
+          // Split first part to separate street from city (last word is city)
+          const firstPartWords = firstPart.trim().split(/\s+/);
+          if (firstPartWords.length >= 2) {
+            city = firstPartWords[firstPartWords.length - 1]; // Last word is city
+            address1 = firstPartWords.slice(0, -1).join(' '); // Everything else is street
+          } else {
+            // If only one word, use it as street and leave city empty (will fail validation)
+            address1 = firstPart;
+          }
         }
       }
-    } else if (addressParts.length === 2) {
-      // Format: "street city, state zip" (only one comma)
-      // Try to parse "street city" part by finding last word as city
-      const firstPart = addressParts[0]; // e.g., "179 Winter Drive Worthington"
-      const secondPart = addressParts[1]; // e.g., "OH 43085"
+    }
+    // Strategy 2: No commas - use pattern matching for "street city STATE zip"
+    else {
+      // Try to match: "123 Street Name CityName ST 12345"
+      // Look for ZIP code (5 digits, optionally followed by -4 digits)
+      const zipMatch = address1.match(/\b(\d{5}(?:-\d{4})?)\s*$/);
 
-      // Parse second part for state and zip
-      const stateZipMatch = secondPart.match(/^([A-Za-z\s]+?)\s+(\d{5}(?:-\d{4})?)$/);
-      if (stateZipMatch) {
-        region = stateZipMatch[1].trim();
-        postalCode = stateZipMatch[2];
+      if (zipMatch) {
+        postalCode = zipMatch[1];
+        const beforeZip = address1.substring(0, zipMatch.index).trim();
 
-        // Split first part to separate street from city (last word is city)
-        const firstPartWords = firstPart.trim().split(/\s+/);
-        if (firstPartWords.length >= 2) {
-          city = firstPartWords[firstPartWords.length - 1]; // Last word is city
-          address1 = firstPartWords.slice(0, -1).join(' '); // Everything else is street
-        } else {
-          // If only one word, use it as street and leave city empty (will fail validation)
-          address1 = firstPart;
+        // Look for 2-letter state code before ZIP
+        const stateMatch = beforeZip.match(/\b([A-Z]{2}|[A-Za-z]{2})\s*$/);
+
+        if (stateMatch) {
+          region = stateMatch[1].toUpperCase();
+          const beforeState = beforeZip.substring(0, stateMatch.index).trim();
+
+          // Split remaining into street + city
+          // Assume last 1-2 words before state are city name
+          const words = beforeState.split(/\s+/);
+          if (words.length >= 3) {
+            // Take last 1-2 words as city (heuristic: if last word is short, might be part of city)
+            const lastWord = words[words.length - 1];
+            const secondLastWord = words[words.length - 2];
+
+            // Common patterns: "San Francisco", "Los Angeles", "New York"
+            if (words.length >= 4 && (
+              ['San', 'Los', 'New', 'Fort', 'Mount', 'St', 'St.'].includes(secondLastWord) ||
+              lastWord.length <= 4 // Short word might be part of city
+            )) {
+              city = `${secondLastWord} ${lastWord}`;
+              address1 = words.slice(0, -2).join(' ');
+            } else {
+              city = lastWord;
+              address1 = words.slice(0, -1).join(' ');
+            }
+          } else if (words.length === 2) {
+            // Only 2 words: "Street City"
+            city = words[1];
+            address1 = words[0];
+          } else {
+            // Only 1 word - can't separate
+            address1 = beforeState;
+          }
         }
       }
     }

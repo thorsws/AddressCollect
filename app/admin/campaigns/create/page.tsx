@@ -3,6 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+interface Question {
+  id: string;
+  question_text: string;
+  question_type: 'text' | 'multiple_choice' | 'checkboxes';
+  is_required: boolean;
+  options: string[];
+}
+
 export default function CreateCampaign() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -12,9 +20,21 @@ export default function CreateCampaign() {
   const [bannerType, setBannerType] = useState<'url' | 'upload'>('url');
   const [uploading, setUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
+
+  // Questions state
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [isAddingQuestion, setIsAddingQuestion] = useState(false);
+  const [newQuestion, setNewQuestion] = useState({
+    question_text: '',
+    question_type: 'text' as 'text' | 'multiple_choice' | 'checkboxes',
+    is_required: false,
+    options: ['', ''],
+  });
+
   const [formData, setFormData] = useState({
     slug: '',
     title: '',
+    internal_title: '',
     description: '',
     capacity_total: 100,
     is_active: true,
@@ -25,6 +45,8 @@ export default function CreateCampaign() {
     collect_company: false,
     collect_phone: false,
     collect_title: false,
+    enable_questions: false,
+    questions_intro_text: '',
     privacy_blurb: "We only use your information to fulfill your request. We won't sell your data.",
     max_claims_per_email: 1,
     max_claims_per_ip_per_day: 5,
@@ -34,6 +56,7 @@ export default function CreateCampaign() {
     show_logo: false,
     contact_email: '',
     contact_text: 'If you have any questions, please email',
+    notes: '',
   });
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,12 +90,68 @@ export default function CreateCampaign() {
     }
   };
 
+  // Question management functions
+  const addQuestion = () => {
+    if (!newQuestion.question_text.trim()) return;
+
+    const needsOptions = newQuestion.question_type === 'multiple_choice' || newQuestion.question_type === 'checkboxes';
+    const options = needsOptions
+      ? newQuestion.options.filter(o => o.trim())
+      : [];
+
+    if (needsOptions && options.length < 2) {
+      alert('Multiple choice and checkbox questions need at least 2 options');
+      return;
+    }
+
+    const question: Question = {
+      id: Math.random().toString(36).substr(2, 9),
+      question_text: newQuestion.question_text,
+      question_type: newQuestion.question_type,
+      is_required: newQuestion.is_required,
+      options,
+    };
+
+    setQuestions([...questions, question]);
+    setNewQuestion({
+      question_text: '',
+      question_type: 'text',
+      is_required: false,
+      options: ['', ''],
+    });
+    setIsAddingQuestion(false);
+  };
+
+  const deleteQuestion = (id: string) => {
+    setQuestions(questions.filter(q => q.id !== id));
+  };
+
+  const addOption = () => {
+    setNewQuestion({
+      ...newQuestion,
+      options: [...newQuestion.options, ''],
+    });
+  };
+
+  const updateOption = (index: number, value: string) => {
+    const newOptions = [...newQuestion.options];
+    newOptions[index] = value;
+    setNewQuestion({ ...newQuestion, options: newOptions });
+  };
+
+  const removeOption = (index: number) => {
+    if (newQuestion.options.length <= 2) return;
+    const newOptions = newQuestion.options.filter((_, i) => i !== index);
+    setNewQuestion({ ...newQuestion, options: newOptions });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
+      // Create campaign first
       const response = await fetch('/api/admin/campaigns/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -85,6 +164,25 @@ export default function CreateCampaign() {
       if (!response.ok) {
         const data = await response.json();
         throw new Error(data.error || 'Failed to create campaign');
+      }
+
+      const { campaign } = await response.json();
+
+      // If questions are enabled and there are questions, create them
+      if (formData.enable_questions && questions.length > 0) {
+        for (let i = 0; i < questions.length; i++) {
+          const q = questions[i];
+          await fetch(`/api/admin/campaigns/${campaign.id}/questions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              question_text: q.question_text,
+              question_type: q.question_type,
+              is_required: q.is_required,
+              options: q.options.length > 0 ? q.options : null,
+            }),
+          });
+        }
       }
 
       router.push('/admin');
@@ -125,7 +223,24 @@ export default function CreateCampaign() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Campaign Title *
+                  Internal Campaign Title * <span className="text-gray-500 text-xs">(Admin only)</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.internal_title}
+                  onChange={(e) => setFormData({ ...formData, internal_title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Stanford Book - Spring 2026"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This title is only shown in the admin interface
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Public Campaign Title * <span className="text-gray-500 text-xs">(Shown to users)</span>
                 </label>
                 <input
                   type="text"
@@ -135,6 +250,9 @@ export default function CreateCampaign() {
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Stanford Book Giveaway"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  This title is shown on the public campaign page
+                </p>
               </div>
 
               <div>
@@ -301,6 +419,233 @@ export default function CreateCampaign() {
                 />
                 <span className="ml-2 text-sm text-gray-700">Collect phone number</span>
               </label>
+            </div>
+          </div>
+
+          {/* Custom Questions */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Custom Questions</h2>
+
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enable_questions}
+                  onChange={(e) => setFormData({ ...formData, enable_questions: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Enable custom questions</span>
+              </label>
+              <p className="text-xs text-gray-500 ml-6">
+                Add custom questions to collect additional information from users
+              </p>
+
+              {formData.enable_questions && (
+                <div className="ml-6 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Questions Section Intro Text (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.questions_intro_text}
+                      onChange={(e) => setFormData({ ...formData, questions_intro_text: e.target.value })}
+                      placeholder="Please help us learn more about your use of AI"
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This text will appear above your questions to provide context to users
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {formData.enable_questions && (
+                <div className="mt-4 pl-6 border-l-2 border-blue-200">
+                  <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-md font-medium text-gray-900">Questions ({questions.length})</h3>
+                      {!isAddingQuestion && (
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingQuestion(true)}
+                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
+                        >
+                          + Add Question
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Existing Questions */}
+                    {questions.length === 0 && !isAddingQuestion && (
+                      <p className="text-gray-500 text-sm">No questions yet. Click &quot;Add Question&quot; to get started.</p>
+                    )}
+
+                    <div className="space-y-3">
+                      {questions.map((q, index) => (
+                        <div key={q.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium text-gray-500">Q{index + 1}</span>
+                                <span className={`px-2 py-0.5 text-xs rounded ${
+                                  q.question_type === 'text'
+                                    ? 'bg-gray-100 text-gray-600'
+                                    : q.question_type === 'multiple_choice'
+                                    ? 'bg-purple-100 text-purple-600'
+                                    : 'bg-blue-100 text-blue-600'
+                                }`}>
+                                  {q.question_type === 'text'
+                                    ? 'Text'
+                                    : q.question_type === 'multiple_choice'
+                                    ? 'Multiple Choice'
+                                    : 'Checkboxes'}
+                                </span>
+                                {q.is_required && (
+                                  <span className="px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded">Required</span>
+                                )}
+                              </div>
+                              <p className="text-gray-900 text-sm">{q.question_text}</p>
+                              {q.options && q.options.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {q.options.map((opt, i) => (
+                                    <span key={i} className="px-2 py-0.5 text-xs bg-white text-gray-700 rounded border border-gray-200">
+                                      {opt}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => deleteQuestion(q.id)}
+                              className="text-red-600 hover:text-red-700 text-sm ml-2"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add Question Form */}
+                    {isAddingQuestion && (
+                      <div className="mt-4 border border-blue-200 rounded-lg p-4 bg-blue-50">
+                        <h4 className="font-medium text-gray-900 mb-3 text-sm">New Question</h4>
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Question Type</label>
+                            <select
+                              value={newQuestion.question_type}
+                              onChange={(e) => setNewQuestion({ ...newQuestion, question_type: e.target.value as 'text' | 'multiple_choice' | 'checkboxes' })}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                            >
+                              <option value="text">Free Text</option>
+                              <option value="multiple_choice">Multiple Choice (select one)</option>
+                              <option value="checkboxes">Checkboxes (select multiple)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
+                            <input
+                              type="text"
+                              value={newQuestion.question_text}
+                              onChange={(e) => setNewQuestion({ ...newQuestion, question_text: e.target.value })}
+                              placeholder="Enter your question..."
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+
+                          {(newQuestion.question_type === 'multiple_choice' || newQuestion.question_type === 'checkboxes') && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Options</label>
+                              <div className="space-y-2">
+                                {newQuestion.options.map((opt, index) => (
+                                  <div key={index} className="flex gap-2">
+                                    <input
+                                      type="text"
+                                      value={opt}
+                                      onChange={(e) => updateOption(index, e.target.value)}
+                                      placeholder={`Option ${index + 1}`}
+                                      className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    {newQuestion.options.length > 2 && (
+                                      <button
+                                        type="button"
+                                        onClick={() => removeOption(index)}
+                                        className="text-red-600 hover:text-red-700 px-2"
+                                      >
+                                        &times;
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={addOption}
+                                  className="text-sm text-blue-600 hover:text-blue-700"
+                                >
+                                  + Add Option
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={newQuestion.is_required}
+                              onChange={(e) => setNewQuestion({ ...newQuestion, is_required: e.target.checked })}
+                              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Required question</span>
+                          </label>
+
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={addQuestion}
+                              disabled={!newQuestion.question_text.trim()}
+                              className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 disabled:opacity-50"
+                            >
+                              Add Question
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setIsAddingQuestion(false)}
+                              className="px-4 py-2 text-gray-600 hover:text-gray-700 text-sm"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Internal Notes */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Internal Notes</h2>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Admin Notes (Internal Only)
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Internal notes for this campaign (not visible to users)..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Private notes for admins only - will not be shown on the public campaign page
+              </p>
             </div>
           </div>
 

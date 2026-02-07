@@ -2,11 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+const QuestionsManager = dynamic(() => import('../QuestionsManager'), { ssr: false });
 
 interface Campaign {
   id: string;
   slug: string;
   title: string;
+  internal_title: string;
   description: string | null;
   capacity_total: number | null;
   is_active: boolean;
@@ -17,6 +21,8 @@ interface Campaign {
   collect_company: boolean;
   collect_phone: boolean;
   collect_title: boolean;
+  enable_questions: boolean;
+  questions_intro_text: string | null;
   privacy_blurb: string | null;
   max_claims_per_email: number;
   max_claims_per_ip_per_day: number;
@@ -28,9 +34,24 @@ interface Campaign {
   kiosk_mode: boolean;
   starts_at: string | null;
   ends_at: string | null;
+  notes: string | null;
 }
 
-export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
+interface Question {
+  id: string;
+  question_text: string;
+  question_type: 'text' | 'multiple_choice' | 'checkboxes';
+  is_required: boolean;
+  display_order: number;
+  options: string[] | null;
+}
+
+interface Props {
+  campaign: Campaign;
+  initialQuestions: Question[];
+}
+
+export default function EditCampaignForm({ campaign, initialQuestions }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,6 +59,7 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
 
   const [formData, setFormData] = useState({
     title: campaign.title,
+    internal_title: campaign.internal_title,
     description: campaign.description || '',
     capacity_total: campaign.capacity_total || 100,
     is_active: campaign.is_active,
@@ -48,6 +70,8 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
     collect_company: campaign.collect_company,
     collect_phone: campaign.collect_phone,
     collect_title: campaign.collect_title,
+    enable_questions: campaign.enable_questions,
+    questions_intro_text: campaign.questions_intro_text || '',
     privacy_blurb: campaign.privacy_blurb || '',
     max_claims_per_email: campaign.max_claims_per_email,
     max_claims_per_ip_per_day: campaign.max_claims_per_ip_per_day,
@@ -59,6 +83,7 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
     kiosk_mode: campaign.kiosk_mode,
     starts_at: campaign.starts_at ? campaign.starts_at.slice(0, 16) : '',
     ends_at: campaign.ends_at ? campaign.ends_at.slice(0, 16) : '',
+    notes: campaign.notes || '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -123,7 +148,23 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Campaign Title *
+                  Internal Campaign Title * <span className="text-gray-500 text-xs">(Admin only)</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.internal_title}
+                  onChange={(e) => setFormData({ ...formData, internal_title: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This title is only shown in the admin interface
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Public Campaign Title * <span className="text-gray-500 text-xs">(Shown to users)</span>
                 </label>
                 <input
                   type="text"
@@ -132,6 +173,9 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  This title is shown on the public campaign page
+                </p>
               </div>
 
               <div>
@@ -214,6 +258,26 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
                   <p className="text-xs text-gray-500 mt-1">Leave empty for no end date</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Internal Notes */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Internal Notes</h2>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Admin Notes (Internal Only)
+              </label>
+              <textarea
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Internal notes for this campaign (not visible to users)..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Private notes for admins only - will not be shown on the public campaign page
+              </p>
             </div>
           </div>
 
@@ -331,6 +395,52 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
                 />
                 <span className="ml-2 text-sm text-gray-700">Collect phone number</span>
               </label>
+            </div>
+          </div>
+
+          {/* Custom Questions */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Custom Questions</h2>
+
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.enable_questions}
+                  onChange={(e) => setFormData({ ...formData, enable_questions: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Enable custom questions</span>
+              </label>
+              <p className="text-xs text-gray-500 ml-6">
+                Collect additional information from users with custom questions
+              </p>
+
+              {formData.enable_questions && (
+                <div className="ml-6 space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Questions Section Intro Text (optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.questions_intro_text}
+                      onChange={(e) => setFormData({ ...formData, questions_intro_text: e.target.value })}
+                      placeholder="Please help us learn more about your use of AI"
+                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This text will appear above your questions to provide context to users
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {formData.enable_questions && (
+                <div className="mt-4 pl-6 border-l-2 border-blue-200">
+                  <QuestionsManager campaignId={campaign.id} initialQuestions={initialQuestions} />
+                </div>
+              )}
             </div>
           </div>
 

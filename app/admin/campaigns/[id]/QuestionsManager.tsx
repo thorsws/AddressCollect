@@ -5,7 +5,7 @@ import { useState } from 'react';
 interface Question {
   id: string;
   question_text: string;
-  question_type: 'text' | 'multiple_choice';
+  question_type: 'text' | 'multiple_choice' | 'checkboxes';
   is_required: boolean;
   display_order: number;
   options: string[] | null;
@@ -21,7 +21,7 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
   const [isAdding, setIsAdding] = useState(false);
   const [newQuestion, setNewQuestion] = useState({
     question_text: '',
-    question_type: 'text' as 'text' | 'multiple_choice',
+    question_type: 'text' as 'text' | 'multiple_choice' | 'checkboxes',
     is_required: false,
     options: ['', ''],
   });
@@ -32,12 +32,13 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
 
     setLoading(true);
     try {
-      const options = newQuestion.question_type === 'multiple_choice'
+      const needsOptions = newQuestion.question_type === 'multiple_choice' || newQuestion.question_type === 'checkboxes';
+      const options = needsOptions
         ? newQuestion.options.filter(o => o.trim())
         : null;
 
-      if (newQuestion.question_type === 'multiple_choice' && (!options || options.length < 2)) {
-        alert('Multiple choice questions need at least 2 options');
+      if (needsOptions && (!options || options.length < 2)) {
+        alert('Multiple choice and checkbox questions need at least 2 options');
         setLoading(false);
         return;
       }
@@ -132,9 +133,17 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-500">Q{index + 1}</span>
                   <span className={`px-2 py-0.5 text-xs rounded ${
-                    q.question_type === 'text' ? 'bg-gray-100 text-gray-600' : 'bg-purple-100 text-purple-600'
+                    q.question_type === 'text'
+                      ? 'bg-gray-100 text-gray-600'
+                      : q.question_type === 'multiple_choice'
+                      ? 'bg-purple-100 text-purple-600'
+                      : 'bg-blue-100 text-blue-600'
                   }`}>
-                    {q.question_type === 'text' ? 'Text' : 'Multiple Choice'}
+                    {q.question_type === 'text'
+                      ? 'Text'
+                      : q.question_type === 'multiple_choice'
+                      ? 'Multiple Choice'
+                      : 'Checkboxes'}
                   </span>
                   {q.is_required && (
                     <span className="px-2 py-0.5 text-xs bg-red-100 text-red-600 rounded">Required</span>
@@ -172,11 +181,12 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
               <label className="block text-sm font-medium text-gray-700 mb-1">Question Type</label>
               <select
                 value={newQuestion.question_type}
-                onChange={(e) => setNewQuestion({ ...newQuestion, question_type: e.target.value as 'text' | 'multiple_choice' })}
+                onChange={(e) => setNewQuestion({ ...newQuestion, question_type: e.target.value as 'text' | 'multiple_choice' | 'checkboxes' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
               >
                 <option value="text">Free Text</option>
-                <option value="multiple_choice">Multiple Choice</option>
+                <option value="multiple_choice">Multiple Choice (select one)</option>
+                <option value="checkboxes">Checkboxes (select multiple)</option>
               </select>
             </div>
 
@@ -191,7 +201,7 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
               />
             </div>
 
-            {newQuestion.question_type === 'multiple_choice' && (
+            {(newQuestion.question_type === 'multiple_choice' || newQuestion.question_type === 'checkboxes') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Options</label>
                 <div className="space-y-2">

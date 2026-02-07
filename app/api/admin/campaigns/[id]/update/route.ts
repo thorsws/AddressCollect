@@ -45,6 +45,7 @@ export async function PUT(
       .from('campaigns')
       .update({
         title: data.title,
+        internal_title: data.internal_title,
         description: data.description || null,
         capacity_total: data.capacity_total ? parseInt(data.capacity_total) : 0,
         is_active: data.is_active !== false,
@@ -64,8 +65,10 @@ export async function PUT(
         contact_email: data.contact_email || null,
         contact_text: data.contact_text || null,
         kiosk_mode: data.kiosk_mode === true,
+        enable_questions: data.enable_questions === true,
         starts_at: data.starts_at ? new Date(data.starts_at).toISOString() : null,
         ends_at: data.ends_at ? new Date(data.ends_at).toISOString() : null,
+        notes: data.notes || null,
         updated_at: new Date().toISOString(),
         updated_by: admin.id,
       })

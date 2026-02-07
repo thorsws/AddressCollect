@@ -153,7 +153,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
             <p className="text-2xl font-bold text-purple-600">{testClaims.length}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Shipped</p>
+            <p className="text-sm text-gray-600">Sent</p>
             <p className="text-2xl font-bold text-blue-600">{shippedClaims.length}</p>
           </div>
           <div>
@@ -221,7 +221,10 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                   Address
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Shipped
+                  Sent
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
@@ -231,7 +234,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredClaims.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
                     No claims yet
                   </td>
                 </tr>
@@ -293,33 +296,19 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {!isPreCreated && (
-                            <>
-                              {claim.shipped_at ? (
-                                <div className="flex flex-col">
-                                  <button
-                                    onClick={() => toggleShipped(claim.id, !!claim.shipped_at)}
-                                    className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
-                                  >
-                                    ✓ Shipped
-                                  </button>
-                                  <span className="text-xs text-gray-500 mt-1">
-                                    {new Date(claim.shipped_at).toLocaleDateString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      year: 'numeric'
-                                    })}
-                                  </span>
-                                </div>
-                              ) : (
-                                <button
-                                  onClick={() => toggleShipped(claim.id, !!claim.shipped_at)}
-                                  className="px-3 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
-                                >
-                                  Mark Shipped
-                                </button>
-                              )}
-                            </>
+                          {!isPreCreated && claim.shipped_at && (
+                            <span className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
+                              ✓ Sent
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                          {!isPreCreated && claim.shipped_at && (
+                            new Date(claim.shipped_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
@@ -329,6 +318,22 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                           >
                             {isExpanded ? 'Hide' : 'Details'}
                           </button>
+                          {!isPreCreated && !claim.shipped_at && (
+                            <button
+                              onClick={() => toggleShipped(claim.id, false)}
+                              className="text-green-600 hover:text-green-800 mr-2"
+                            >
+                              Mark Sent
+                            </button>
+                          )}
+                          {!isPreCreated && claim.shipped_at && (
+                            <button
+                              onClick={() => toggleShipped(claim.id, true)}
+                              className="text-gray-600 hover:text-gray-800 mr-2"
+                            >
+                              Unmark
+                            </button>
+                          )}
                           {isPreCreated && (
                             <button
                               onClick={() => copyClaimUrl(claim.claim_token!)}
@@ -343,7 +348,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                       {/* Expanded row for details */}
                       {isExpanded && (
                         <tr key={`${claim.id}-details`}>
-                          <td colSpan={6} className="px-6 py-4 bg-gray-50">
+                          <td colSpan={7} className="px-6 py-4 bg-gray-50">
                             <div className="space-y-3">
                               <div>
                                 <p className="text-xs font-medium text-gray-500 uppercase">Created</p>
@@ -352,7 +357,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
 
                               {claim.shipped_at && (
                                 <div>
-                                  <p className="text-xs font-medium text-gray-500 uppercase">Shipped</p>
+                                  <p className="text-xs font-medium text-gray-500 uppercase">Sent</p>
                                   <p className="text-sm text-gray-900">{new Date(claim.shipped_at).toLocaleString()}</p>
                                 </div>
                               )}

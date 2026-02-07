@@ -4,6 +4,7 @@ Questions for SXSW and AI Future Raffle campaigns to understand how participants
 
 ## Campaign Context
 
+- **SIA Conference Campaign**: Staffing Industry Analysts conference, targeting staffing/recruiting professionals
 - **SXSW Campaign**: Tech/innovation conference audience, raffle for signed copy (50 winners)
 - **AI Future Raffle**: General audience interested in AI transformation, free book raffle
 
