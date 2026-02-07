@@ -8,11 +8,15 @@ interface Claim {
   first_name: string;
   last_name: string;
   email: string | null;
+  company: string | null;
+  title: string | null;
+  phone: string | null;
   address1: string;
   address2: string | null;
   city: string;
   region: string;
   postal_code: string;
+  country: string;
   claim_token: string | null;
   is_test_claim: boolean;
   shipped_at: string | null;
@@ -57,6 +61,80 @@ export default function ClaimsFilter({ claims }: Props) {
 
   // Count stats
   const testCount = claims.filter(c => c.is_test_claim).length;
+
+  const exportFilteredClaims = () => {
+    // Create CSV content
+    const headers = [
+      'Campaign',
+      'Status',
+      'First Name',
+      'Last Name',
+      'Email',
+      'Company',
+      'Title',
+      'Phone',
+      'Address 1',
+      'Address 2',
+      'City',
+      'State/Region',
+      'Postal Code',
+      'Country',
+      'Created Date',
+      'Sent Date (Pre-Order)',
+      'Is Test',
+      'Is Pre-Created'
+    ];
+
+    const rows = filteredClaims.map(claim => {
+      const isPreCreated = claim.claim_token && !claim.address1;
+      return [
+        claim.campaigns?.title || '',
+        claim.status,
+        claim.first_name,
+        claim.last_name,
+        claim.email || '',
+        claim.company || '',
+        claim.title || '',
+        claim.phone || '',
+        claim.address1 || '',
+        claim.address2 || '',
+        claim.city || '',
+        claim.region || '',
+        claim.postal_code || '',
+        claim.country || '',
+        new Date(claim.created_at).toLocaleDateString(),
+        claim.shipped_at ? new Date(claim.shipped_at).toLocaleDateString() : '',
+        claim.is_test_claim ? 'Yes' : 'No',
+        isPreCreated ? 'Yes' : 'No'
+      ];
+    });
+
+    // Generate CSV
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row =>
+        row.map(cell => {
+          // Escape quotes and wrap in quotes if contains comma, quote, or newline
+          const cellStr = String(cell);
+          if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+            return `"${cellStr.replace(/"/g, '""')}"`;
+          }
+          return cellStr;
+        }).join(',')
+      )
+    ].join('\n');
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `filtered-addresses-${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <>
@@ -114,9 +192,18 @@ export default function ClaimsFilter({ claims }: Props) {
           </span>
         </label>
 
-        <span className="text-sm text-gray-500 ml-auto">
-          Showing {filteredClaims.length} of {claims.length} claims
-        </span>
+        <div className="ml-auto flex items-center gap-4">
+          <span className="text-sm text-gray-500">
+            Showing {filteredClaims.length} of {claims.length} claims
+          </span>
+          <button
+            onClick={exportFilteredClaims}
+            disabled={filteredClaims.length === 0}
+            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Export Filtered ({filteredClaims.length})
+          </button>
+        </div>
       </div>
 
       {/* Table */}
