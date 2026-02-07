@@ -10,10 +10,9 @@ interface Props {
 export default function CampaignQRCode({ campaignSlug, campaignTitle }: Props) {
   const [showLarge, setShowLarge] = useState(false);
 
-  // Use the production URL or current origin
-  const baseUrl = typeof window !== 'undefined'
-    ? window.location.origin
-    : process.env.APP_BASE_URL || 'http://localhost:3000';
+  // Use configured campaign URL from environment
+  const baseUrl = process.env.NEXT_PUBLIC_CAMPAIGN_URL ||
+    (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
 
   const campaignUrl = `${baseUrl}/c/${campaignSlug}`;
 
