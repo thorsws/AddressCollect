@@ -167,20 +167,35 @@ function normalizeRow(rawRow: any): CsvRowWithDate | null {
   // Handle address fields - could be in one field or split
   let address1 = rawRow.address1 || rawRow['Street Address 1'] || rawRow.Address || '';
   let address2 = rawRow.address2 || rawRow['Street Address 2'] || '';
+  let city = rawRow.city || rawRow.City || '';
+  let region = rawRow.region || rawRow.State || rawRow.state || '';
+  let postalCode = rawRow.postalCode || rawRow.Zip || rawRow.zip || rawRow.PostalCode || '';
+  let country = rawRow.country || rawRow.Country || 'US'; // Default to US
 
-  // If address is in one field with comma, try to split it
-  if (address1 && address1.includes(',') && !rawRow['Street Address 1']) {
+  // If city is missing but address1 has commas, try to parse full address from address1
+  if (!city && address1 && address1.includes(',')) {
     const addressParts = address1.split(',').map((s: string) => s.trim());
+
     if (addressParts.length >= 3) {
-      // Format: "street, city, state zip"
+      // Format: "street, city, state zip" or "street, city state zip"
       address1 = addressParts[0];
+      city = addressParts[1];
+
+      // Parse "state zip" or "state, zip"
+      const lastPart = addressParts[2];
+      const stateZipMatch = lastPart.match(/^([A-Za-z\s]+?)\s+(\d{5}(?:-\d{4})?)$/);
+      if (stateZipMatch) {
+        region = stateZipMatch[1].trim();
+        postalCode = stateZipMatch[2];
+      } else {
+        // Maybe it's just state, and zip is in next part
+        region = lastPart;
+        if (addressParts[3]) {
+          postalCode = addressParts[3].trim();
+        }
+      }
     }
   }
-
-  const city = rawRow.city || rawRow.City || '';
-  const region = rawRow.region || rawRow.State || rawRow.state || '';
-  const postalCode = rawRow.postalCode || rawRow.Zip || rawRow.zip || rawRow.PostalCode || '';
-  const country = rawRow.country || rawRow.Country || 'US'; // Default to US
 
   // Extract shipped date from CSV if available
   const shippedDate = rawRow['Sent to Charlie Date?'] || rawRow['Shipped Date'] || '';
