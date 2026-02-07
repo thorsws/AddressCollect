@@ -112,13 +112,33 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
             {campaign.starts_at && (
               <div>
                 <span className="font-medium text-blue-800">Starts:</span>{' '}
-                <span className="text-blue-700">{new Date(campaign.starts_at).toLocaleString()}</span>
+                <span className="text-blue-700">
+                  {new Date(campaign.starts_at).toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZoneName: 'short',
+                  })}
+                </span>
               </div>
             )}
             {campaign.ends_at && (
               <div>
                 <span className="font-medium text-blue-800">Ends:</span>{' '}
-                <span className="text-blue-700">{new Date(campaign.ends_at).toLocaleString()}</span>
+                <span className="text-blue-700">
+                  {new Date(campaign.ends_at).toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZoneName: 'short',
+                  })}
+                </span>
               </div>
             )}
           </div>
