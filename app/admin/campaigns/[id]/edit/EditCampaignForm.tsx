@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import LogoToggle from '../LogoToggle';
+import { utcToEastern, easternToUtc } from '@/lib/utils/timezone';
 
 const QuestionsManager = dynamic(() => import('../QuestionsManager'), { ssr: false });
 
@@ -83,8 +84,8 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
     contact_email: campaign.contact_email || '',
     contact_text: campaign.contact_text || 'If you have any questions, please email',
     kiosk_mode: campaign.kiosk_mode,
-    starts_at: campaign.starts_at ? campaign.starts_at.slice(0, 16) : '',
-    ends_at: campaign.ends_at ? campaign.ends_at.slice(0, 16) : '',
+    starts_at: campaign.starts_at ? utcToEastern(campaign.starts_at) : '',
+    ends_at: campaign.ends_at ? utcToEastern(campaign.ends_at) : '',
     notes: campaign.notes || '',
   });
 
@@ -94,13 +95,18 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
     setError('');
 
     try {
+      // Convert datetime values from Eastern to UTC before sending
+      const dataToSend = {
+        ...formData,
+        capacity_total: unlimitedCapacity ? 0 : formData.capacity_total,
+        starts_at: formData.starts_at ? easternToUtc(formData.starts_at) : '',
+        ends_at: formData.ends_at ? easternToUtc(formData.ends_at) : '',
+      };
+
       const response = await fetch(`/api/admin/campaigns/${campaign.id}/update`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          capacity_total: unlimitedCapacity ? 0 : formData.capacity_total,
-        }),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
