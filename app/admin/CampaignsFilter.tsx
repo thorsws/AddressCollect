@@ -107,7 +107,7 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
                 <span className="font-semibold text-gray-900 flex-shrink-0 text-right" style={{ whiteSpace: 'nowrap' }}>
                   {campaign.capacity_total
                     ? `${campaign.confirmedCount} / ${campaign.capacity_total}`
-                    : `${campaign.confirmedCount} (Unlimited)`}
+                    : `${campaign.confirmedCount} / Unlimited`}
                 </span>
               </div>
               {campaign.pendingCount > 0 && (
