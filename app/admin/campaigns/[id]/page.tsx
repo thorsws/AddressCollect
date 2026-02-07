@@ -17,10 +17,13 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
 
   const { id } = await params;
 
-  // Fetch campaign
+  // Fetch campaign with creator info
   const { data: campaign, error: campaignError } = await supabaseAdmin
     .from('campaigns')
-    .select('*')
+    .select(`
+      *,
+      creator:admin_users!created_by(id, email, name)
+    `)
     .eq('id', id)
     .single();
 
@@ -57,16 +60,19 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div className="flex items-center space-x-4">
-              <a href="/admin" className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
-                <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-6 w-auto" />
-                <span>← Dashboard</span>
-              </a>
-              <span className="text-gray-300">|</span>
-              <h1 className="text-xl font-bold text-gray-900">{campaign.title}</h1>
-            </div>
-            <div className="flex items-center space-x-4">
+          {/* Top row: Logo + Dashboard link | User email */}
+          <div className="flex justify-between items-center h-12 border-b border-gray-200">
+            <a href="/admin" className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
+              <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-6 w-auto" />
+              <span>← Dashboard</span>
+            </a>
+            <span className="text-sm text-gray-600">{admin.email}</span>
+          </div>
+
+          {/* Bottom row: Campaign title | Action buttons */}
+          <div className="flex justify-between items-center py-4">
+            <h1 className="text-2xl font-bold text-gray-900">{campaign.title}</h1>
+            <div className="flex items-center space-x-3">
               <PreviewCampaignButton campaignSlug={campaign.slug} />
               <a
                 href={`/admin/campaigns/${campaign.id}/edit`}
@@ -83,7 +89,6 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               {admin.role === 'super_admin' && (
                 <DeleteCampaignButton campaignId={campaign.id} campaignTitle={campaign.title} />
               )}
-              <span className="text-sm text-gray-600">{admin.email}</span>
             </div>
           </div>
         </div>
@@ -97,7 +102,9 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               {campaign.created_by && (
                 <div>
                   <span className="font-medium text-blue-800">Created by:</span>{' '}
-                  <span className="text-blue-700">{campaign.created_by}</span>
+                  <span className="text-blue-700">
+                    {campaign.creator?.name || campaign.creator?.email || 'Unknown'}
+                  </span>
                 </div>
               )}
               {campaign.starts_at && (
