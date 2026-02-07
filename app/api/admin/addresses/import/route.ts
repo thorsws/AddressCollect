@@ -18,19 +18,47 @@ interface CsvRow {
   country: string;
 }
 
-function parseCsv(csvText: string, skipRows: number = 0): CsvRowWithDate[] {
+/**
+ * Smart detection of header row by looking for expected column names
+ */
+function findHeaderRow(lines: string[]): number {
+  const expectedColumns = [
+    'full name', 'firstname', 'lastname', 'name',
+    'email', 'address', 'street', 'city', 'state', 'region',
+    'zip', 'postal', 'country'
+  ];
+
+  for (let i = 0; i < Math.min(10, lines.length); i++) {
+    const line = lines[i].toLowerCase();
+    // Count how many expected columns are in this line
+    const matches = expectedColumns.filter(col => line.includes(col)).length;
+
+    // If we find 3 or more expected columns, this is likely the header
+    if (matches >= 3) {
+      console.log(`[CSV] Auto-detected header row at line ${i + 1} with ${matches} column matches`);
+      return i;
+    }
+  }
+
+  // Default to first row if no header detected
+  console.log('[CSV] No header row detected, using first row');
+  return 0;
+}
+
+function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
   const lines = csvText.trim().split('\n');
-  if (lines.length < skipRows + 2) {
+  if (lines.length < 2) {
     throw new Error('CSV file must have at least a header row and one data row');
   }
 
-  // Skip the specified number of rows and get headers
-  const headerLine = lines[skipRows];
+  // Auto-detect header row if skipRows is -1
+  const headerRowIndex = skipRows === -1 ? findHeaderRow(lines) : skipRows;
+  const headerLine = lines[headerRowIndex];
   const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
 
   const rows: CsvRowWithDate[] = [];
 
-  for (let i = skipRows + 1; i < lines.length; i++) {
+  for (let i = headerRowIndex + 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line.trim()) continue;
 

@@ -15,7 +15,7 @@ export default function ImportAddressesPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [campaignSlug, setCampaignSlug] = useState('');
   const [status, setStatus] = useState<'confirmed' | 'shipped'>('shipped');
-  const [skipRows, setSkipRows] = useState(3);
+  const [skipRows, setSkipRows] = useState(-1); // -1 = auto-detect
   const [defaultShippedDate, setDefaultShippedDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
@@ -210,19 +210,24 @@ export default function ImportAddressesPage() {
 
             <div>
               <label htmlFor="skipRows" className="block text-sm font-medium text-gray-700 mb-1">
-                Skip Header Rows
+                Header Row Detection
               </label>
-              <input
-                type="number"
+              <select
                 id="skipRows"
                 value={skipRows}
-                onChange={(e) => setSkipRows(parseInt(e.target.value) || 0)}
-                min="0"
-                max="10"
+                onChange={(e) => setSkipRows(parseInt(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+              >
+                <option value="-1">🤖 Auto-detect (recommended)</option>
+                <option value="0">Row 1 (no rows to skip)</option>
+                <option value="1">Row 2 (skip 1 row)</option>
+                <option value="2">Row 3 (skip 2 rows)</option>
+                <option value="3">Row 4 (skip 3 rows)</option>
+                <option value="4">Row 5 (skip 4 rows)</option>
+                <option value="5">Row 6 (skip 5 rows)</option>
+              </select>
               <p className="mt-1 text-sm text-gray-500">
-                Number of rows to skip before the column header row (default: 3 for your format)
+                Auto-detect finds the header row automatically by looking for column names like "Full Name", "Email", "City"
               </p>
             </div>
 
