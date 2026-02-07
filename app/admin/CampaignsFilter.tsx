@@ -102,9 +102,9 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
             </div>
 
             <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm items-baseline gap-2">
+              <div className="flex justify-between text-sm items-baseline gap-2 flex-nowrap">
                 <span className="text-gray-600 flex-shrink-0">Confirmed:</span>
-                <span className="font-semibold text-gray-900 whitespace-nowrap flex-shrink-0 text-right">
+                <span className="font-semibold text-gray-900 whitespace-nowrap flex-shrink-0 text-right min-w-0">
                   {campaign.confirmedCount}{campaign.capacity_total ? ` / ${campaign.capacity_total}` : ' (Unlimited)'}
                 </span>
               </div>
