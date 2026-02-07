@@ -8,6 +8,7 @@ import DeleteCampaignButton from './DeleteCampaignButton';
 import QuestionsManager from './QuestionsManager';
 import CampaignQRCode from './CampaignQRCode';
 import PreviewCampaignButton from './PreviewCampaignButton';
+import LogoToggle from './LogoToggle';
 
 export default async function CampaignDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -100,7 +101,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Campaign Info */}
         <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex flex-wrap gap-6 text-sm">
+          <div className="flex flex-wrap gap-6 text-sm items-center">
             <div>
               <span className="font-medium text-blue-800">Internal Title:</span>{' '}
               <span className="text-blue-700">{campaign.internal_title}</span>
@@ -129,6 +130,9 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                 <span className="text-blue-700">{new Date(campaign.ends_at).toLocaleString()}</span>
               </div>
             )}
+            <div className="ml-auto">
+              <LogoToggle campaignId={campaign.id} initialValue={campaign.show_logo} />
+            </div>
           </div>
           {campaign.notes && (
             <div className="mt-4 pt-4 border-t border-blue-200">
