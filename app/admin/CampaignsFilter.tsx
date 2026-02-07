@@ -106,32 +106,10 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
               )}
             </div>
 
-            <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm items-center gap-3">
-                <span className="text-gray-600 flex-shrink-0">Confirmed:</span>
-                <span className="font-semibold text-gray-900 flex-shrink-0 text-right" style={{ whiteSpace: 'nowrap' }}>
-                  {capacityText}
-                </span>
-              </div>
-              {campaign.pendingCount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Pending:</span>
-                  <span className="font-semibold text-yellow-600">{campaign.pendingCount}</span>
-                </div>
-              )}
-              {campaign.capacity_total && campaign.capacity_total > 0 && (
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full"
-                    style={{
-                      width: `${Math.min(
-                        (campaign.confirmedCount / campaign.capacity_total) * 100,
-                        100
-                      )}%`,
-                    }}
-                  />
-                </div>
-              )}
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">
+                Confirmed: <span className="font-semibold text-gray-900">{capacityText}</span>
+              </p>
             </div>
 
             <div className="flex space-x-2">
