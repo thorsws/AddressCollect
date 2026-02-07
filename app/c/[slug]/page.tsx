@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import CampaignForm from './CampaignForm';
 import BannerPreview from './BannerPreview';
+import ReactMarkdown from 'react-markdown';
 
 export default async function CampaignPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -169,7 +170,9 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">{campaign.title}</h1>
             {campaign.description && (
-              <p className="text-gray-600 mb-6">{campaign.description}</p>
+              <div className="text-gray-600 mb-6 prose prose-sm max-w-none">
+                <ReactMarkdown>{campaign.description}</ReactMarkdown>
+              </div>
             )}
 
             {campaign.ends_at && (
