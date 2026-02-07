@@ -386,38 +386,53 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h2>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contact Email (optional)
-                </label>
+              <label className="flex items-center">
                 <input
-                  type="email"
-                  value={formData.contact_email}
-                  onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
-                  placeholder="support@example.com"
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  type="checkbox"
+                  checked={!!formData.contact_email}
+                  onChange={(e) => {
+                    if (!e.target.checked) {
+                      setFormData({ ...formData, contact_email: '' });
+                    } else {
+                      setFormData({ ...formData, contact_email: formData.contact_email || 'jan.rosen@rallertechnologies.com' });
+                    }
+                  }}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <p className="text-xs text-gray-500 mt-1">
-                  If provided, this email will be shown on the campaign page
-                </p>
-              </div>
+                <span className="ml-2 text-sm text-gray-700">Show contact information on campaign page</span>
+              </label>
 
               {formData.contact_email && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Contact Text
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.contact_text}
-                    onChange={(e) => setFormData({ ...formData, contact_text: e.target.value })}
-                    placeholder="If you have any questions, please email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Preview: {formData.contact_text} <span className="text-blue-600">{formData.contact_email}</span>
-                  </p>
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Email
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.contact_email}
+                      onChange={(e) => setFormData({ ...formData, contact_email: e.target.value })}
+                      placeholder="support@example.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Text
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.contact_text}
+                      onChange={(e) => setFormData({ ...formData, contact_text: e.target.value })}
+                      placeholder="If you have any questions, please email"
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Preview: {formData.contact_text} <span className="text-blue-600">{formData.contact_email}</span>
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           </div>
