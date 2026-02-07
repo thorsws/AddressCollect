@@ -236,7 +236,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               </div>
             )}
 
-            {campaign.show_scarcity && campaign.capacity_total && (
+            {campaign.show_scarcity && campaign.capacity_total > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-blue-900 font-medium">
                   {campaign.capacity_total - claimCount} of {campaign.capacity_total} spots remaining

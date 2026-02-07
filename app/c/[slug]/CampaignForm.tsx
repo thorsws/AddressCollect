@@ -459,8 +459,8 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             required
           />
           <span className="ml-3 text-sm text-gray-700">
-            I consent to providing my information for this raffle. I understand my data will be used solely for this giveaway,
-            stored securely, and deleted within 60 days after books are shipped. I can request deletion at any time by contacting{' '}
+            I consent to providing my information for <strong>{campaign.title}</strong>. I understand my data will be used solely for this purpose,
+            stored securely, and deleted within 60 days. I can request deletion at any time by contacting{' '}
             {campaign.contact_email || 'the organizer'}.
             {' '}<span className="text-red-500">*</span>
           </span>
