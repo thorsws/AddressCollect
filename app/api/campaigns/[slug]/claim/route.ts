@@ -89,7 +89,7 @@ async function handlePreCreatedClaim(
 
   if (duplicatePerson) {
     return NextResponse.json(
-      { error: 'This person has already submitted a claim from this address' },
+      { error: "Good news - you're already registered! We have your information for this campaign." },
       { status: 400 }
     );
   }
@@ -171,7 +171,7 @@ async function handlePreCreatedClaim(
         expires_at: expiresAt,
       });
 
-    const verificationLink = `${process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
+    const verificationLink = `${process.env.NEXT_PUBLIC_CAMPAIGN_URL || process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
     try {
       await sendClaimVerificationEmail(email, verificationLink, campaign.title);
     } catch (emailError) {
@@ -391,7 +391,7 @@ export async function POST(
 
     if (existingClaim) {
       return NextResponse.json(
-        { error: 'This person has already submitted a claim from this address' },
+        { error: "Good news - you're already registered! We have your information for this campaign." },
         { status: 400 }
       );
     }
@@ -506,7 +506,7 @@ export async function POST(
         });
 
       // Send email
-      const verificationLink = `${process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
+      const verificationLink = `${process.env.NEXT_PUBLIC_CAMPAIGN_URL || process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
       try {
         await sendClaimVerificationEmail(email, verificationLink, campaign.title);
       } catch (emailError) {
