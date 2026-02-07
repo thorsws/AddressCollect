@@ -45,8 +45,61 @@ function findHeaderRow(lines: string[]): number {
   return 0;
 }
 
+/**
+ * Parse CSV value, handling quoted fields properly
+ */
+function parseCsvLine(line: string): string[] {
+  const values: string[] = [];
+  let currentValue = '';
+  let insideQuotes = false;
+
+  for (let j = 0; j < line.length; j++) {
+    const char = line[j];
+
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+    } else if (char === ',' && !insideQuotes) {
+      values.push(currentValue.trim());
+      currentValue = '';
+    } else {
+      currentValue += char;
+    }
+  }
+  values.push(currentValue.trim());
+
+  return values;
+}
+
 function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
-  const lines = csvText.trim().split('\n');
+  // Split CSV into lines, but handle multi-line quoted fields
+  const lines: string[] = [];
+  let currentLine = '';
+  let insideQuotes = false;
+
+  for (let i = 0; i < csvText.length; i++) {
+    const char = csvText[i];
+
+    if (char === '"') {
+      insideQuotes = !insideQuotes;
+      currentLine += char;
+    } else if (char === '\n' && !insideQuotes) {
+      if (currentLine.trim()) {
+        lines.push(currentLine);
+      }
+      currentLine = '';
+    } else if (char === '\r') {
+      // Skip \r characters
+      continue;
+    } else {
+      currentLine += char;
+    }
+  }
+  if (currentLine.trim()) {
+    lines.push(currentLine);
+  }
+
+  console.log(`[CSV] Total lines after parsing: ${lines.length}`);
+
   if (lines.length < 2) {
     throw new Error('CSV file must have at least a header row and one data row');
   }
@@ -54,7 +107,10 @@ function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
   // Auto-detect header row if skipRows is -1
   const headerRowIndex = skipRows === -1 ? findHeaderRow(lines) : skipRows;
   const headerLine = lines[headerRowIndex];
-  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const headers = parseCsvLine(headerLine).map(h => h.replace(/^"|"$/g, '').trim());
+
+  console.log(`[CSV] Headers: ${headers.join(', ')}`);
+  console.log(`[CSV] Processing ${lines.length - headerRowIndex - 1} data rows`);
 
   const rows: CsvRowWithDate[] = [];
 
@@ -62,24 +118,7 @@ function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
     const line = lines[i];
     if (!line.trim()) continue;
 
-    // Simple CSV parsing (handles quotes)
-    const values: string[] = [];
-    let currentValue = '';
-    let insideQuotes = false;
-
-    for (let j = 0; j < line.length; j++) {
-      const char = line[j];
-
-      if (char === '"') {
-        insideQuotes = !insideQuotes;
-      } else if (char === ',' && !insideQuotes) {
-        values.push(currentValue.trim());
-        currentValue = '';
-      } else {
-        currentValue += char;
-      }
-    }
-    values.push(currentValue.trim());
+    const values = parseCsvLine(line);
 
     const rawRow: any = {};
     headers.forEach((header, index) => {
@@ -90,8 +129,12 @@ function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
     const row = normalizeRow(rawRow);
     if (row) {
       rows.push(row);
+    } else {
+      console.log(`[CSV] Row ${i + 1} skipped (failed normalization)`);
     }
   }
+
+  console.log(`[CSV] Successfully normalized ${rows.length} rows`);
 
   return rows;
 }
@@ -144,6 +187,14 @@ function normalizeRow(rawRow: any): CsvRowWithDate | null {
 
   // Validate required fields
   if (!address1 || !city || !region || !postalCode) {
+    console.log('[CSV] Row failed validation:', {
+      firstName,
+      lastName,
+      address1: address1 || '[MISSING]',
+      city: city || '[MISSING]',
+      region: region || '[MISSING]',
+      postalCode: postalCode || '[MISSING]',
+    });
     return null;
   }
 
