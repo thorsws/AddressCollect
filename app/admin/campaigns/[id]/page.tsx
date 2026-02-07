@@ -5,7 +5,6 @@ import EnhancedClaimsTable from './EnhancedClaimsTable';
 import InviteCodesManager from './InviteCodesManager';
 import PreCreateClaimForm from './PreCreateClaimForm';
 import DeleteCampaignButton from './DeleteCampaignButton';
-import QuestionsManager from './QuestionsManager';
 import CampaignQRCode from './CampaignQRCode';
 import PreviewCampaignButton from './PreviewCampaignButton';
 import LogoToggle from './LogoToggle';
@@ -49,13 +48,6 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
       .order('created_at', { ascending: false });
     inviteCodes = data || [];
   }
-
-  // Fetch custom questions
-  const { data: questions } = await supabaseAdmin
-    .from('campaign_questions')
-    .select('*')
-    .eq('campaign_id', id)
-    .order('display_order', { ascending: true });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -157,11 +149,6 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
             <InviteCodesManager campaignId={campaign.id} inviteCodes={inviteCodes} />
           </div>
         )}
-
-        {/* Custom Questions */}
-        <div className="mb-6">
-          <QuestionsManager campaignId={campaign.id} initialQuestions={questions || []} />
-        </div>
 
         <EnhancedClaimsTable
           claims={claims || []}
