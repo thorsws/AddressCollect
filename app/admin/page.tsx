@@ -11,10 +11,14 @@ export default async function AdminDashboard() {
     redirect('/admin/login');
   }
 
-  // Fetch all campaigns with claim counts
+  // Fetch all campaigns with claim counts and creator info
   const { data: campaigns } = await supabaseAdmin
     .from('campaigns')
-    .select('*, claims(count)')
+    .select(`
+      *,
+      claims(count),
+      creator:admin_users!created_by(id, email, name)
+    `)
     .order('created_at', { ascending: false });
 
   const campaignsWithStats = await Promise.all(
@@ -35,6 +39,8 @@ export default async function AdminDashboard() {
         ...campaign,
         confirmedCount: confirmedCount || 0,
         pendingCount: pendingCount || 0,
+        creatorName: campaign.creator?.name || campaign.creator?.email || 'Unknown',
+        creatorEmail: campaign.creator?.email || null,
       };
     })
   );

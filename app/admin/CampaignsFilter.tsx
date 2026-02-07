@@ -11,6 +11,8 @@ interface Campaign {
   test_mode: boolean;
   capacity_total: number | null;
   created_by: string | null;
+  creatorName: string;
+  creatorEmail: string | null;
   confirmedCount: number;
   pendingCount: number;
 }
@@ -23,14 +25,23 @@ interface Props {
 export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) {
   const [ownerFilter, setOwnerFilter] = useState<string>('all'); // all, mine, specific-email
 
-  // Get unique creators
-  const creators = Array.from(new Set(campaigns.map(c => c.created_by).filter(Boolean))) as string[];
+  // Get unique creators (using email for filter key)
+  const creators = Array.from(new Set(
+    campaigns
+      .filter(c => c.creatorEmail)
+      .map(c => ({ email: c.creatorEmail!, name: c.creatorName }))
+  )).reduce((acc, creator) => {
+    if (!acc.find(c => c.email === creator.email)) {
+      acc.push(creator);
+    }
+    return acc;
+  }, [] as Array<{ email: string; name: string }>);
 
   // Apply filter
   const filteredCampaigns = campaigns.filter(campaign => {
     if (ownerFilter === 'all') return true;
-    if (ownerFilter === 'mine') return campaign.created_by === currentUserEmail;
-    return campaign.created_by === ownerFilter;
+    if (ownerFilter === 'mine') return campaign.creatorEmail === currentUserEmail;
+    return campaign.creatorEmail === ownerFilter;
   });
 
   return (
@@ -46,10 +57,10 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
               className="text-sm border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Campaigns ({campaigns.length})</option>
-              <option value="mine">My Campaigns ({campaigns.filter(c => c.created_by === currentUserEmail).length})</option>
+              <option value="mine">My Campaigns ({campaigns.filter(c => c.creatorEmail === currentUserEmail).length})</option>
               {creators.map(creator => (
-                <option key={creator} value={creator}>
-                  {creator} ({campaigns.filter(c => c.created_by === creator).length})
+                <option key={creator.email} value={creator.email}>
+                  {creator.name} ({campaigns.filter(c => c.creatorEmail === creator.email).length})
                 </option>
               ))}
             </select>
@@ -63,39 +74,39 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
       {/* Campaign Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {filteredCampaigns.map((campaign) => (
-          <div key={campaign.id} className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
+          <div key={campaign.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
+            <div className="mb-4">
+              <div className="flex items-start justify-between mb-2">
                 <h3 className="text-lg font-semibold text-gray-900">{campaign.title}</h3>
-                <p className="text-sm text-gray-500 mt-1">/c/{campaign.slug}</p>
-                {campaign.created_by && (
-                  <p className="text-xs text-gray-400 mt-1">
-                    Created by {campaign.created_by === currentUserEmail ? 'you' : campaign.created_by}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-col gap-1 items-end">
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded ${
-                    campaign.is_active
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {campaign.is_active ? 'Active' : 'Inactive'}
-                </span>
-                {campaign.test_mode && (
-                  <span className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-800">
-                    Test Mode
+                <div className="flex gap-1.5 ml-2 flex-shrink-0">
+                  <span
+                    className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
+                      campaign.is_active
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-600'
+                    }`}
+                  >
+                    {campaign.is_active ? 'Active' : 'Inactive'}
                   </span>
-                )}
+                  {campaign.test_mode && (
+                    <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                      Test
+                    </span>
+                  )}
+                </div>
               </div>
+              <p className="text-sm text-gray-500">/c/{campaign.slug}</p>
+              {campaign.creatorEmail && (
+                <p className="text-xs text-gray-400 mt-1.5">
+                  Created by {campaign.creatorEmail === currentUserEmail ? 'you' : campaign.creatorName}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2 mb-4">
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm items-baseline">
                 <span className="text-gray-600">Confirmed:</span>
-                <span className="font-semibold text-gray-900">
+                <span className="font-semibold text-gray-900 whitespace-nowrap">
                   {campaign.confirmedCount}{campaign.capacity_total ? ` / ${campaign.capacity_total}` : ' (Unlimited)'}
                 </span>
               </div>
