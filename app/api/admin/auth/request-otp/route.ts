@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const clientIP = await getClientIP();
     const ipHash = hashIP(clientIP);
 
-    // Rate limit: Max 3 OTP sends per email per hour
+    // Rate limit: Max 10 OTP sends per email per hour
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     const { data: recentEmailRequests } = await supabaseAdmin
       .from('admin_otp_requests')
@@ -48,21 +48,21 @@ export async function POST(request: NextRequest) {
       .eq('email', normalizedEmail)
       .gte('created_at', oneHourAgo);
 
-    if (recentEmailRequests && recentEmailRequests.length >= 3) {
+    if (recentEmailRequests && recentEmailRequests.length >= 10) {
       return NextResponse.json(
         { error: 'Too many OTP requests. Please try again later.' },
         { status: 429 }
       );
     }
 
-    // Rate limit: Max 10 OTP sends per IP per hour
+    // Rate limit: Max 50 OTP sends per IP per hour
     const { data: recentIPRequests } = await supabaseAdmin
       .from('admin_otp_requests')
       .select('id')
       .eq('ip_hash', ipHash)
       .gte('created_at', oneHourAgo);
 
-    if (recentIPRequests && recentIPRequests.length >= 10) {
+    if (recentIPRequests && recentIPRequests.length >= 50) {
       return NextResponse.json(
         { error: 'Too many OTP requests from this IP. Please try again later.' },
         { status: 429 }
