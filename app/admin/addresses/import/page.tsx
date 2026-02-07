@@ -16,6 +16,7 @@ export default function ImportAddressesPage() {
   const [campaignSlug, setCampaignSlug] = useState('');
   const [status, setStatus] = useState<'confirmed' | 'shipped'>('shipped');
   const [skipRows, setSkipRows] = useState(3);
+  const [defaultShippedDate, setDefaultShippedDate] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   const [error, setError] = useState('');
@@ -71,6 +72,9 @@ export default function ImportAddressesPage() {
       formData.append('campaignSlug', campaignSlug);
       formData.append('status', status);
       formData.append('skipRows', skipRows.toString());
+      if (defaultShippedDate) {
+        formData.append('defaultShippedDate', defaultShippedDate);
+      }
 
       const response = await fetch('/api/admin/addresses/import', {
         method: 'POST',
@@ -135,6 +139,7 @@ export default function ImportAddressesPage() {
               <li><strong>State/region</strong> (required)</li>
               <li><strong>Zip/postalCode</strong> (required)</li>
               <li><strong>Country</strong> (defaults to US if missing)</li>
+              <li><strong>Sent to Charlie Date?</strong> or <strong>Shipped Date</strong> (optional, e.g. &quot;Jan 30&quot; or &quot;1/30/2024&quot;)</li>
             </ul>
             <p className="text-blue-800 text-sm mt-2">
               <strong>Note:</strong> Duplicate addresses across ALL campaigns will be skipped automatically.
@@ -184,6 +189,24 @@ export default function ImportAddressesPage() {
                 Use &quot;Shipped&quot; for historical addresses that have already been fulfilled
               </p>
             </div>
+
+            {status === 'shipped' && (
+              <div>
+                <label htmlFor="defaultShippedDate" className="block text-sm font-medium text-gray-700 mb-1">
+                  Default Shipped Date (Optional)
+                </label>
+                <input
+                  type="date"
+                  id="defaultShippedDate"
+                  value={defaultShippedDate}
+                  onChange={(e) => setDefaultShippedDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  Used if CSV doesn&apos;t have &quot;Sent to Charlie Date?&quot; column. Leave blank to use today.
+                </p>
+              </div>
+            )}
 
             <div>
               <label htmlFor="skipRows" className="block text-sm font-medium text-gray-700 mb-1">

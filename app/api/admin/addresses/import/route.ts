@@ -18,7 +18,7 @@ interface CsvRow {
   country: string;
 }
 
-function parseCsv(csvText: string, skipRows: number = 0): CsvRow[] {
+function parseCsv(csvText: string, skipRows: number = 0): CsvRowWithDate[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < skipRows + 2) {
     throw new Error('CSV file must have at least a header row and one data row');
@@ -28,7 +28,7 @@ function parseCsv(csvText: string, skipRows: number = 0): CsvRow[] {
   const headerLine = lines[skipRows];
   const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
 
-  const rows: CsvRow[] = [];
+  const rows: CsvRowWithDate[] = [];
 
   for (let i = skipRows + 1; i < lines.length; i++) {
     const line = lines[i];
@@ -68,7 +68,11 @@ function parseCsv(csvText: string, skipRows: number = 0): CsvRow[] {
   return rows;
 }
 
-function normalizeRow(rawRow: any): CsvRow | null {
+interface CsvRowWithDate extends CsvRow {
+  shippedDate?: string;
+}
+
+function normalizeRow(rawRow: any): CsvRowWithDate | null {
   // Handle "Full Name" column by splitting it
   let firstName = rawRow.firstName || rawRow.FirstName || '';
   let lastName = rawRow.lastName || rawRow.LastName || '';
@@ -107,6 +111,9 @@ function normalizeRow(rawRow: any): CsvRow | null {
   const postalCode = rawRow.postalCode || rawRow.Zip || rawRow.zip || rawRow.PostalCode || '';
   const country = rawRow.country || rawRow.Country || 'US'; // Default to US
 
+  // Extract shipped date from CSV if available
+  const shippedDate = rawRow['Sent to Charlie Date?'] || rawRow['Shipped Date'] || '';
+
   // Validate required fields
   if (!address1 || !city || !region || !postalCode) {
     return null;
@@ -125,7 +132,45 @@ function normalizeRow(rawRow: any): CsvRow | null {
     region: region.trim(),
     postalCode: postalCode.trim(),
     country: country.trim(),
+    shippedDate: shippedDate.trim() || undefined,
   };
+}
+
+function parseShippedDate(dateStr: string, defaultYear: number = new Date().getFullYear()): Date | null {
+  if (!dateStr) return null;
+
+  // Handle formats like "Jan 30", "January 30", "1/30", "01/30/2024"
+  const str = dateStr.trim();
+
+  // Try parsing as ISO date first
+  const isoDate = new Date(str);
+  if (!isNaN(isoDate.getTime()) && str.includes('-')) {
+    return isoDate;
+  }
+
+  // Handle "Jan 30" or "January 30" format
+  const monthDayMatch = str.match(/^([A-Za-z]+)\s+(\d{1,2})$/);
+  if (monthDayMatch) {
+    const monthStr = monthDayMatch[1];
+    const day = parseInt(monthDayMatch[2]);
+    const monthNames = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+    const monthIndex = monthNames.findIndex(m => monthStr.toLowerCase().startsWith(m));
+
+    if (monthIndex >= 0) {
+      return new Date(defaultYear, monthIndex, day);
+    }
+  }
+
+  // Handle "M/D" or "M/D/YYYY" format
+  const slashMatch = str.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/);
+  if (slashMatch) {
+    const month = parseInt(slashMatch[1]) - 1; // 0-indexed
+    const day = parseInt(slashMatch[2]);
+    const year = slashMatch[3] ? (slashMatch[3].length === 2 ? 2000 + parseInt(slashMatch[3]) : parseInt(slashMatch[3])) : defaultYear;
+    return new Date(year, month, day);
+  }
+
+  return null;
 }
 
 export async function POST(request: NextRequest) {
@@ -138,6 +183,7 @@ export async function POST(request: NextRequest) {
     const campaignSlug = formData.get('campaignSlug') as string;
     const status = (formData.get('status') as string) || 'confirmed';
     const skipRows = parseInt(formData.get('skipRows') as string) || 0;
+    const defaultShippedDate = formData.get('defaultShippedDate') as string; // Optional default date
 
     if (!file || !campaignSlug) {
       return NextResponse.json(
@@ -197,6 +243,25 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
+        // Determine shipped_at date
+        let shippedAt: string | null = null;
+        if (status === 'shipped') {
+          // Use date from CSV row if available
+          if (row.shippedDate) {
+            const parsedDate = parseShippedDate(row.shippedDate);
+            shippedAt = parsedDate ? parsedDate.toISOString() : null;
+          }
+          // Otherwise use default shipped date from form
+          if (!shippedAt && defaultShippedDate) {
+            const parsedDate = parseShippedDate(defaultShippedDate);
+            shippedAt = parsedDate ? parsedDate.toISOString() : null;
+          }
+          // Fall back to current date if no date specified
+          if (!shippedAt) {
+            shippedAt = new Date().toISOString();
+          }
+        }
+
         // Insert claim
         const { error: insertError } = await supabaseAdmin
           .from('claims')
@@ -218,7 +283,7 @@ export async function POST(request: NextRequest) {
             email_normalized: row.email ? normalizeEmail(row.email) : null,
             address_fingerprint: addressFingerprint,
             confirmed_at: status === 'confirmed' || status === 'shipped' ? new Date().toISOString() : null,
-            shipped_at: status === 'shipped' ? new Date().toISOString() : null,
+            shipped_at: shippedAt,
           });
 
         if (insertError) {

@@ -30,6 +30,8 @@ interface Props {
 export default function ClaimsFilter({ claims }: Props) {
   const [showTest, setShowTest] = useState(false); // Default: hide test claims
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [shippedFilter, setShippedFilter] = useState<string>('all'); // all, shipped, not-shipped
+  const [preCreatedFilter, setPreCreatedFilter] = useState<string>('all'); // all, pre-created, regular
 
   // Apply filters
   const filteredClaims = claims.filter(claim => {
@@ -39,8 +41,16 @@ export default function ClaimsFilter({ claims }: Props) {
     // Status filter
     if (statusFilter === 'confirmed' && claim.status !== 'confirmed') return false;
     if (statusFilter === 'pending' && claim.status !== 'pending') return false;
-    if (statusFilter === 'pre-created' && !(claim.claim_token && !claim.address1)) return false;
-    if (statusFilter === 'shipped' && !claim.shipped_at) return false;
+    if (statusFilter === 'rejected' && claim.status !== 'rejected') return false;
+
+    // Shipped filter
+    if (shippedFilter === 'shipped' && !claim.shipped_at) return false;
+    if (shippedFilter === 'not-shipped' && claim.shipped_at) return false;
+
+    // Pre-created filter
+    const isPreCreated = claim.claim_token && !claim.address1;
+    if (preCreatedFilter === 'pre-created' && !isPreCreated) return false;
+    if (preCreatedFilter === 'regular' && isPreCreated) return false;
 
     return true;
   });
@@ -62,8 +72,33 @@ export default function ClaimsFilter({ claims }: Props) {
             <option value="all">All</option>
             <option value="confirmed">Confirmed</option>
             <option value="pending">Pending</option>
-            <option value="pre-created">Pre-Created</option>
-            <option value="shipped">Shipped</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Shipped:</label>
+          <select
+            value={shippedFilter}
+            onChange={(e) => setShippedFilter(e.target.value)}
+            className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="shipped">Shipped Only</option>
+            <option value="not-shipped">Not Shipped</option>
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Type:</label>
+          <select
+            value={preCreatedFilter}
+            onChange={(e) => setPreCreatedFilter(e.target.value)}
+            className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All</option>
+            <option value="pre-created">Pre-Created Only</option>
+            <option value="regular">Regular Only</option>
           </select>
         </div>
 
@@ -112,6 +147,9 @@ export default function ClaimsFilter({ claims }: Props) {
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Created
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Shipped Date
               </th>
             </tr>
           </thead>
@@ -185,6 +223,9 @@ export default function ClaimsFilter({ claims }: Props) {
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
                     {new Date(claim.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {claim.shipped_at ? new Date(claim.shipped_at).toLocaleDateString() : '-'}
                   </td>
                 </tr>
               );
