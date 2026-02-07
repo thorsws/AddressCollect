@@ -8,6 +8,7 @@ interface Campaign {
   title: string;
   slug: string;
   is_active: boolean;
+  test_mode: boolean;
   capacity_total: number | null;
   created_by: string | null;
   confirmedCount: number;
@@ -73,15 +74,22 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
                   </p>
                 )}
               </div>
-              <span
-                className={`px-2 py-1 text-xs font-medium rounded ${
-                  campaign.is_active
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-gray-100 text-gray-800'
-                }`}
-              >
-                {campaign.is_active ? 'Active' : 'Inactive'}
-              </span>
+              <div className="flex flex-col gap-1 items-end">
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded ${
+                    campaign.is_active
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {campaign.is_active ? 'Active' : 'Inactive'}
+                </span>
+                {campaign.test_mode && (
+                  <span className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-800">
+                    Test Mode
+                  </span>
+                )}
+              </div>
             </div>
 
             <div className="space-y-2 mb-4">
