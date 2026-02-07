@@ -66,7 +66,7 @@ export default function EnhancedHelpPage() {
                 <li><strong>Quick navigation</strong> - Jump to any section</li>
                 <li><strong>Updated guides</strong> - All the latest features</li>
               </ul>
-              <p className="mt-4">You can always re-run this tour by clicking "Start Tour" at the top!</p>
+              <p className="mt-4">You can always re-run this tour by clicking &quot;Start Tour&quot; at the top!</p>
             </div>
             <div className="flex gap-4">
               <button
@@ -174,7 +174,7 @@ export default function EnhancedHelpPage() {
                   <li><strong>Show Scarcity</strong> - Display remaining capacity</li>
                   <li><strong>Contact Information</strong> - Optional checkbox for company/phone/title fields</li>
                   <li><strong>Test Mode</strong> - Claims marked as test data</li>
-                  <li><strong>Kiosk Mode</strong> - Show "Submit Another" button (for shared devices)</li>
+                  <li><strong>Kiosk Mode</strong> - Show &quot;Submit Another&quot; button (for shared devices)</li>
                 </ul>
               </div>
             </section>
@@ -221,7 +221,7 @@ export default function EnhancedHelpPage() {
             <section id="filters" className="bg-white rounded-lg shadow-md p-6 transition-all">
               <h2 className="text-2xl font-bold text-gray-900 mb-4">🔍 Filtering & Search</h2>
               <div className="space-y-4 text-gray-700">
-                <p>On the "All Addresses" page, you can filter claims by:</p>
+                <p>On the &quot;All Addresses&quot; page, you can filter claims by:</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
                   <li><strong>Status</strong> - Confirmed, Pending, Rejected</li>
                   <li><strong>Shipped</strong> - Shipped Only, Not Shipped, All</li>
@@ -229,7 +229,7 @@ export default function EnhancedHelpPage() {
                   <li><strong>Test Claims</strong> - Toggle to show/hide test data</li>
                 </ul>
                 <p className="mt-3">
-                  Combine filters to find exactly what you need, like "Confirmed + Not Shipped" to see addresses ready to ship.
+                  Combine filters to find exactly what you need, like &quot;Confirmed + Not Shipped&quot; to see addresses ready to ship.
                 </p>
               </div>
             </section>
@@ -242,10 +242,10 @@ export default function EnhancedHelpPage() {
 
                 <h3 className="text-lg font-semibold text-gray-800 mt-4">Features</h3>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Flexible CSV format</strong> - Handles "Full Name", "Street Address 1/2", "State", "Zip", etc.</li>
+                  <li><strong>Flexible CSV format</strong> - Handles &quot;Full Name&quot;, &quot;Street Address 1/2&quot;, &quot;State&quot;, &quot;Zip&quot;, etc.</li>
                   <li><strong>Campaign selection</strong> - Choose which campaign to import into</li>
                   <li><strong>Status selection</strong> - Mark as Confirmed or Shipped</li>
-                  <li><strong>Shipped date support</strong> - Reads "Sent to Charlie Date?" column or use default date</li>
+                  <li><strong>Shipped date support</strong> - Reads &quot;Sent to Charlie Date?&quot; column or use default date</li>
                   <li><strong>Skip header rows</strong> - Configure how many rows to skip (default 3)</li>
                   <li><strong>Auto-deduplication</strong> - Skips duplicates across ALL campaigns</li>
                 </ul>
@@ -264,9 +264,9 @@ export default function EnhancedHelpPage() {
               <div className="space-y-4 text-gray-700">
                 <p>Download your collected addresses as CSV files:</p>
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Per Campaign</strong> - Click "Export CSV" on any campaign page</li>
-                  <li><strong>All Campaigns</strong> - Use "Export All CSV" from All Addresses page</li>
-                  <li><strong>Filtered Export</strong> - Apply filters, then click "Export Filtered (X)" to export only what you're viewing</li>
+                  <li><strong>Per Campaign</strong> - Click &quot;Export CSV&quot; on any campaign page</li>
+                  <li><strong>All Campaigns</strong> - Use &quot;Export All CSV&quot; from All Addresses page</li>
+                  <li><strong>Filtered Export</strong> - Apply filters, then click &quot;Export Filtered (X)&quot; to export only what you&apos;re viewing</li>
                 </ul>
                 <p className="mt-3">
                   CSV includes: Campaign, Status, Name, Email, Company, Title, Phone, Full Address, Created Date, Sent Date, Test/Pre-Created flags
