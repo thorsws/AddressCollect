@@ -73,7 +73,12 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
 
       {/* Campaign Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCampaigns.map((campaign) => (
+        {filteredCampaigns.map((campaign) => {
+          const capacityText = (campaign.capacity_total && campaign.capacity_total > 0)
+            ? `${campaign.confirmedCount} / ${campaign.capacity_total}`
+            : `${campaign.confirmedCount} / Unlimited`;
+
+          return (
           <div key={campaign.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
             <div className="mb-4">
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.title}</h3>
@@ -105,9 +110,7 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
               <div className="flex justify-between text-sm items-center gap-3">
                 <span className="text-gray-600 flex-shrink-0">Confirmed:</span>
                 <span className="font-semibold text-gray-900 flex-shrink-0 text-right" style={{ whiteSpace: 'nowrap' }}>
-                  {campaign.capacity_total && campaign.capacity_total > 0
-                    ? `${campaign.confirmedCount} / ${campaign.capacity_total}`
-                    : `${campaign.confirmedCount} / Unlimited`}
+                  {capacityText}
                 </span>
               </div>
               {campaign.pendingCount > 0 && (
@@ -148,7 +151,8 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
               </a>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {filteredCampaigns.length === 0 && (
