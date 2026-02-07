@@ -70,7 +70,12 @@ function parseCsvLine(line: string): string[] {
   return values;
 }
 
-function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
+interface ParseResult {
+  rows: CsvRowWithDate[];
+  validationErrors: Array<{ row: number; name: string; reason: string }>;
+}
+
+function parseCsv(csvText: string, skipRows: number = -1): ParseResult {
   // Split CSV into lines, but handle multi-line quoted fields
   const lines: string[] = [];
   let currentLine = '';
@@ -113,6 +118,7 @@ function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
   console.log(`[CSV] Processing ${lines.length - headerRowIndex - 1} data rows`);
 
   const rows: CsvRowWithDate[] = [];
+  const validationErrors: Array<{ row: number; name: string; reason: string }> = [];
 
   for (let i = headerRowIndex + 1; i < lines.length; i++) {
     const line = lines[i];
@@ -126,37 +132,52 @@ function parseCsv(csvText: string, skipRows: number = -1): CsvRowWithDate[] {
     });
 
     // Normalize to our expected format
-    const row = normalizeRow(rawRow);
-    if (row) {
-      rows.push(row);
+    const result = normalizeRow(rawRow);
+    if (result.row) {
+      rows.push(result.row);
     } else {
       console.log(`[CSV] Row ${i + 1} skipped (failed normalization)`);
+      const name = rawRow['Full Name'] || `${rawRow.firstName || ''} ${rawRow.lastName || ''}`.trim() || 'Unknown';
+      validationErrors.push({
+        row: i + 1,
+        name,
+        reason: result.error || 'Missing required fields',
+      });
     }
   }
 
   console.log(`[CSV] Successfully normalized ${rows.length} rows`);
 
-  return rows;
+  return { rows, validationErrors };
 }
 
 interface CsvRowWithDate extends CsvRow {
   shippedDate?: string;
 }
 
-function normalizeRow(rawRow: any): CsvRowWithDate | null {
+interface NormalizeResult {
+  row: CsvRowWithDate | null;
+  error?: string;
+}
+
+function normalizeRow(rawRow: any): NormalizeResult {
   // Handle "Full Name" column by splitting it
   let firstName = rawRow.firstName || rawRow.FirstName || '';
   let lastName = rawRow.lastName || rawRow.LastName || '';
 
   if (!firstName && !lastName && rawRow['Full Name']) {
     const nameParts = rawRow['Full Name'].trim().split(/\s+/);
-    if (nameParts.length === 0) return null;
+    if (nameParts.length === 0) {
+      return { row: null, error: 'Empty name' };
+    }
 
     firstName = nameParts[0];
     lastName = nameParts.slice(1).join(' ') || nameParts[0]; // Use first name as last if only one name
   }
 
-  if (!firstName || !lastName) return null;
+  if (!firstName || !lastName) {
+    return { row: null, error: 'Missing first or last name' };
+  }
 
   // Map various column name formats
   const email = rawRow.email || rawRow.Email || '';
@@ -224,6 +245,13 @@ function normalizeRow(rawRow: any): CsvRowWithDate | null {
 
   // Validate required fields
   if (!address1 || !city || !region || !postalCode) {
+    const missing = [];
+    if (!address1) missing.push('address');
+    if (!city) missing.push('city');
+    if (!region) missing.push('state');
+    if (!postalCode) missing.push('zip');
+
+    const errorMsg = `Missing: ${missing.join(', ')}`;
     console.log('[CSV] Row failed validation:', {
       firstName,
       lastName,
@@ -232,23 +260,25 @@ function normalizeRow(rawRow: any): CsvRowWithDate | null {
       region: region || '[MISSING]',
       postalCode: postalCode || '[MISSING]',
     });
-    return null;
+    return { row: null, error: errorMsg };
   }
 
   return {
-    firstName: firstName.trim(),
-    lastName: lastName.trim(),
-    email: email.trim() || undefined,
-    company: company.trim() || undefined,
-    title: title.trim() || undefined,
-    phone: phone.trim() || undefined,
-    address1: address1.trim(),
-    address2: address2.trim() || undefined,
-    city: city.trim(),
-    region: region.trim(),
-    postalCode: postalCode.trim(),
-    country: country.trim(),
-    shippedDate: shippedDate.trim() || undefined,
+    row: {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: email.trim() || undefined,
+      company: company.trim() || undefined,
+      title: title.trim() || undefined,
+      phone: phone.trim() || undefined,
+      address1: address1.trim(),
+      address2: address2.trim() || undefined,
+      city: city.trim(),
+      region: region.trim(),
+      postalCode: postalCode.trim(),
+      country: country.trim(),
+      shippedDate: shippedDate.trim() || undefined,
+    }
   };
 }
 
@@ -324,11 +354,17 @@ export async function POST(request: NextRequest) {
 
     // Read CSV file
     const csvText = await file.text();
-    const rows = parseCsv(csvText, skipRows);
+    const parseResult = parseCsv(csvText, skipRows);
+    const { rows, validationErrors } = parseResult;
 
     let imported = 0;
     let skipped = 0;
     const errors: string[] = [];
+
+    // Add validation errors to errors array
+    for (const valError of validationErrors) {
+      errors.push(`Row ${valError.row} (${valError.name}): ${valError.reason}`);
+    }
 
     // Process each row
     for (let i = 0; i < rows.length; i++) {
