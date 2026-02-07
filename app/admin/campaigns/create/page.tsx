@@ -47,7 +47,7 @@ export default function CreateCampaign() {
     collect_title: false,
     enable_questions: false,
     questions_intro_text: '',
-    privacy_blurb: "We only use your information to fulfill your request. We won't sell your data.",
+    privacy_blurb: "Your information is used solely for this giveaway. We collect only what's needed to ship your book. Your data is stored securely, never sold or shared, and will be deleted within 60 days after books are shipped. We don't use cookies or tracking. Contact us anytime to request data deletion.",
     max_claims_per_email: 1,
     max_claims_per_ip_per_day: 5,
     test_mode: false,

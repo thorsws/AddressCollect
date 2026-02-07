@@ -17,6 +17,7 @@ interface Campaign {
   banner_url: string | null;
   kiosk_mode: boolean;
   questions_intro_text: string | null;
+  contact_email: string | null;
 }
 
 interface Question {
@@ -67,6 +68,7 @@ interface Props {
 export default function CampaignForm({ campaign, questions = [] }: Props) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -92,6 +94,13 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
     setLoading(true);
     setError('');
 
+    // Validate consent
+    if (!consent) {
+      setError('Please agree to the terms and data collection to continue');
+      setLoading(false);
+      return;
+    }
+
     // Validate required questions
     for (const q of questions) {
       const answer = answers[q.id];
@@ -110,7 +119,7 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
       const response = await fetch(`/api/campaigns/${campaign.slug}/claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, answers }),
+        body: JSON.stringify({ ...formData, answers, consent }),
       });
 
       const data = await response.json();
@@ -438,6 +447,25 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
           </div>
         </div>
       )}
+
+      {/* Consent Checkbox */}
+      <div className="border-t pt-6">
+        <label className="flex items-start">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            required
+          />
+          <span className="ml-3 text-sm text-gray-700">
+            I consent to providing my information for this raffle. I understand my data will be used solely for this giveaway,
+            stored securely, and deleted within 60 days after books are shipped. I can request deletion at any time by contacting{' '}
+            {campaign.contact_email || 'the organizer'}.
+            {' '}<span className="text-red-500">*</span>
+          </span>
+        </label>
+      </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">

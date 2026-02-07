@@ -13,12 +13,20 @@ async function handlePreCreatedClaim(
   campaign: any,
   data: any
 ): Promise<NextResponse> {
-  const {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode} = data;
+  const {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode, consent} = data;
 
   // Validate required fields
   if (!firstName || !lastName || !address1 || !city || !region || !postalCode || !country) {
     return NextResponse.json(
       { error: 'Missing required address fields' },
+      { status: 400 }
+    );
+  }
+
+  // Validate consent
+  if (!consent) {
+    return NextResponse.json(
+      { error: 'Consent is required to submit' },
       { status: 400 }
     );
   }
@@ -102,6 +110,8 @@ async function handlePreCreatedClaim(
       address_fingerprint: addressFingerprint,
       ip_hash: ipHash,
       user_agent: userAgent,
+      consent_given: consent === true,
+      consent_timestamp: consent === true ? new Date().toISOString() : null,
       status: finalStatus,
       is_test_claim: campaign.test_mode,
       confirmed_at: finalStatus === 'confirmed' ? new Date().toISOString() : null,
@@ -179,6 +189,7 @@ export async function POST(
       inviteCode,
       claimToken, // Optional: for pre-created claims
       answers, // Custom question answers: { questionId: answer }
+      consent, // User consent to data collection
     } = body;
 
     // 1. Load campaign
@@ -216,7 +227,7 @@ export async function POST(
       return await handlePreCreatedClaim(
         claimToken,
         campaign,
-        {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode}
+        {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode, consent}
       );
     }
 
@@ -231,6 +242,14 @@ export async function POST(
     if (campaign.require_email && !email) {
       return NextResponse.json(
         { error: 'Email is required for this campaign' },
+        { status: 400 }
+      );
+    }
+
+    // 3c. Validate consent
+    if (!consent) {
+      return NextResponse.json(
+        { error: 'Consent is required to submit' },
         { status: 400 }
       );
     }
@@ -382,6 +401,8 @@ export async function POST(
         address_fingerprint: addressFingerprint,
         ip_hash: ipHash,
         user_agent: userAgent,
+        consent_given: consent === true,
+        consent_timestamp: consent === true ? new Date().toISOString() : null,
         confirmed_at: initialStatus === 'confirmed' ? new Date().toISOString() : null,
       })
       .select()
