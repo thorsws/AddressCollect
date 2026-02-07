@@ -99,11 +99,11 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
                 )}
               </div>
               <p className="text-sm text-gray-500">/c/{campaign.slug}</p>
-              {campaign.creatorEmail && (
-                <p className="text-xs text-gray-400 mt-1.5">
-                  Created by {campaign.creatorEmail === currentUserEmail ? 'you' : campaign.creatorName}
-                </p>
-              )}
+              <p className="text-xs text-gray-400 mt-1.5">
+                Created by {campaign.creatorEmail
+                  ? (campaign.creatorEmail === currentUserEmail ? 'you' : campaign.creatorName)
+                  : 'Unknown'}
+              </p>
             </div>
 
             <div className="mb-4">
