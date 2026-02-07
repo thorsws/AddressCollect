@@ -72,7 +72,7 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...formData,
-          capacity_total: unlimitedCapacity ? null : formData.capacity_total,
+          capacity_total: unlimitedCapacity ? 0 : formData.capacity_total,
         }),
       });
 

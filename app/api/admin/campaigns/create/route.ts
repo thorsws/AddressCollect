@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         slug: data.slug,
         title: data.title,
         description: data.description || null,
-        capacity_total: data.capacity_total ? parseInt(data.capacity_total) : null,
+        capacity_total: data.capacity_total ? parseInt(data.capacity_total) : 0,
         is_active: data.is_active !== false,
         require_email: data.require_email !== false,
         require_email_verification: data.require_email_verification === true,
