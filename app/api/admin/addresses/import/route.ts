@@ -18,16 +18,19 @@ interface CsvRow {
   country: string;
 }
 
-function parseCsv(csvText: string): CsvRow[] {
+function parseCsv(csvText: string, skipRows: number = 0): CsvRow[] {
   const lines = csvText.trim().split('\n');
-  if (lines.length < 2) {
+  if (lines.length < skipRows + 2) {
     throw new Error('CSV file must have at least a header row and one data row');
   }
 
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  // Skip the specified number of rows and get headers
+  const headerLine = lines[skipRows];
+  const headers = headerLine.split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+
   const rows: CsvRow[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
+  for (let i = skipRows + 1; i < lines.length; i++) {
     const line = lines[i];
     if (!line.trim()) continue;
 
@@ -50,15 +53,79 @@ function parseCsv(csvText: string): CsvRow[] {
     }
     values.push(currentValue.trim());
 
-    const row: any = {};
+    const rawRow: any = {};
     headers.forEach((header, index) => {
-      row[header] = values[index] || '';
+      rawRow[header] = values[index] || '';
     });
 
-    rows.push(row);
+    // Normalize to our expected format
+    const row = normalizeRow(rawRow);
+    if (row) {
+      rows.push(row);
+    }
   }
 
   return rows;
+}
+
+function normalizeRow(rawRow: any): CsvRow | null {
+  // Handle "Full Name" column by splitting it
+  let firstName = rawRow.firstName || rawRow.FirstName || '';
+  let lastName = rawRow.lastName || rawRow.LastName || '';
+
+  if (!firstName && !lastName && rawRow['Full Name']) {
+    const nameParts = rawRow['Full Name'].trim().split(/\s+/);
+    if (nameParts.length === 0) return null;
+
+    firstName = nameParts[0];
+    lastName = nameParts.slice(1).join(' ') || nameParts[0]; // Use first name as last if only one name
+  }
+
+  if (!firstName || !lastName) return null;
+
+  // Map various column name formats
+  const email = rawRow.email || rawRow.Email || '';
+  const company = rawRow.company || rawRow.Company || '';
+  const title = rawRow.title || rawRow.Role || rawRow.Title || '';
+  const phone = rawRow.phone || rawRow.Phone || '';
+
+  // Handle address fields - could be in one field or split
+  let address1 = rawRow.address1 || rawRow['Street Address 1'] || rawRow.Address || '';
+  let address2 = rawRow.address2 || rawRow['Street Address 2'] || '';
+
+  // If address is in one field with comma, try to split it
+  if (address1 && address1.includes(',') && !rawRow['Street Address 1']) {
+    const addressParts = address1.split(',').map((s: string) => s.trim());
+    if (addressParts.length >= 3) {
+      // Format: "street, city, state zip"
+      address1 = addressParts[0];
+    }
+  }
+
+  const city = rawRow.city || rawRow.City || '';
+  const region = rawRow.region || rawRow.State || rawRow.state || '';
+  const postalCode = rawRow.postalCode || rawRow.Zip || rawRow.zip || rawRow.PostalCode || '';
+  const country = rawRow.country || rawRow.Country || 'US'; // Default to US
+
+  // Validate required fields
+  if (!address1 || !city || !region || !postalCode) {
+    return null;
+  }
+
+  return {
+    firstName: firstName.trim(),
+    lastName: lastName.trim(),
+    email: email.trim() || undefined,
+    company: company.trim() || undefined,
+    title: title.trim() || undefined,
+    phone: phone.trim() || undefined,
+    address1: address1.trim(),
+    address2: address2.trim() || undefined,
+    city: city.trim(),
+    region: region.trim(),
+    postalCode: postalCode.trim(),
+    country: country.trim(),
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -69,6 +136,8 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const campaignSlug = formData.get('campaignSlug') as string;
+    const status = (formData.get('status') as string) || 'confirmed';
+    const skipRows = parseInt(formData.get('skipRows') as string) || 0;
 
     if (!file || !campaignSlug) {
       return NextResponse.json(
@@ -93,7 +162,7 @@ export async function POST(request: NextRequest) {
 
     // Read CSV file
     const csvText = await file.text();
-    const rows = parseCsv(csvText);
+    const rows = parseCsv(csvText, skipRows);
 
     let imported = 0;
     let skipped = 0;
@@ -102,15 +171,9 @@ export async function POST(request: NextRequest) {
     // Process each row
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      const rowNumber = i + 2; // +2 because of 0-index and header row
+      const rowNumber = i + skipRows + 2; // Account for skipped rows and header
 
       try {
-        // Validate required fields
-        if (!row.firstName || !row.lastName || !row.address1 || !row.city || !row.region || !row.postalCode || !row.country) {
-          errors.push(`Row ${rowNumber}: Missing required fields`);
-          continue;
-        }
-
         // Generate address fingerprint
         const addressFingerprint = generateAddressFingerprint(
           row.firstName,
@@ -122,11 +185,10 @@ export async function POST(request: NextRequest) {
           row.country
         );
 
-        // Check for duplicate
+        // Check for duplicate across ALL campaigns
         const { data: existingClaim } = await supabaseAdmin
           .from('claims')
-          .select('id')
-          .eq('campaign_id', campaign.id)
+          .select('id, campaign_id')
           .eq('address_fingerprint', addressFingerprint)
           .single();
 
@@ -140,7 +202,7 @@ export async function POST(request: NextRequest) {
           .from('claims')
           .insert({
             campaign_id: campaign.id,
-            status: 'confirmed',
+            status: status,
             first_name: row.firstName.trim(),
             last_name: row.lastName.trim(),
             email: row.email ? row.email.trim() : null,
@@ -155,7 +217,8 @@ export async function POST(request: NextRequest) {
             country: row.country.trim(),
             email_normalized: row.email ? normalizeEmail(row.email) : null,
             address_fingerprint: addressFingerprint,
-            confirmed_at: new Date().toISOString(),
+            confirmed_at: status === 'confirmed' || status === 'shipped' ? new Date().toISOString() : null,
+            shipped_at: status === 'shipped' ? new Date().toISOString() : null,
           });
 
         if (insertError) {

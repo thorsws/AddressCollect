@@ -452,7 +452,7 @@ npm run db:setup         # Full database setup (migrate + reload)
 ```
 
 ### Script Documentation
-
+y
 For detailed information about all available scripts, see [scripts/README.md](../scripts/README.md).
 
 ## References
