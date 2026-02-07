@@ -7,6 +7,7 @@ import PreCreateClaimForm from './PreCreateClaimForm';
 import DeleteCampaignButton from './DeleteCampaignButton';
 import QuestionsManager from './QuestionsManager';
 import CampaignQRCode from './CampaignQRCode';
+import PreviewCampaignButton from './PreviewCampaignButton';
 
 export default async function CampaignDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -65,6 +66,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               <h1 className="text-xl font-bold text-gray-900">{campaign.title}</h1>
             </div>
             <div className="flex items-center space-x-4">
+              <PreviewCampaignButton campaignSlug={campaign.slug} />
               <a
                 href={`/admin/campaigns/${campaign.id}/edit`}
                 className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
