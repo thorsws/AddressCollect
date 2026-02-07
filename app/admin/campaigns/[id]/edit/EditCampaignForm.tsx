@@ -247,7 +247,7 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                     onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty to start immediately</p>
+                  <p className="text-xs text-gray-500 mt-1">Enter in Eastern Time (EST/EDT). Leave empty to start immediately</p>
                 </div>
 
                 <div>
@@ -260,7 +260,7 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                     onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Leave empty for no end date</p>
+                  <p className="text-xs text-gray-500 mt-1">Enter in Eastern Time (EST/EDT). Leave empty for no end date</p>
                 </div>
               </div>
             </div>
