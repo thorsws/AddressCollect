@@ -172,6 +172,22 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               <p className="text-gray-600 mb-6">{campaign.description}</p>
             )}
 
+            {campaign.ends_at && (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                <p className="text-amber-900 font-medium">
+                  Deadline: {new Date(campaign.ends_at).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    timeZoneName: 'short'
+                  })}
+                </p>
+              </div>
+            )}
+
             {campaign.show_scarcity && campaign.capacity_total && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-blue-900 font-medium">
