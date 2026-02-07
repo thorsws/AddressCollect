@@ -25,6 +25,9 @@ interface Campaign {
   banner_url: string | null;
   contact_email: string | null;
   contact_text: string | null;
+  kiosk_mode: boolean;
+  starts_at: string | null;
+  ends_at: string | null;
 }
 
 export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
@@ -53,6 +56,9 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
     banner_url: campaign.banner_url || '',
     contact_email: campaign.contact_email || '',
     contact_text: campaign.contact_text || 'If you have any questions, please email',
+    kiosk_mode: campaign.kiosk_mode,
+    starts_at: campaign.starts_at ? campaign.starts_at.slice(0, 16) : '',
+    ends_at: campaign.ends_at ? campaign.ends_at.slice(0, 16) : '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -179,6 +185,35 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
                   <p className="text-xs text-blue-600 mt-1">No capacity limit - good for raffles and signups</p>
                 )}
               </div>
+
+              {/* Campaign Dates */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Starts At (optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.starts_at}
+                    onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty to start immediately</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ends At (optional)
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={formData.ends_at}
+                    onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Leave empty for no end date</p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -248,6 +283,16 @@ export default function EditCampaignForm({ campaign }: { campaign: Campaign }) {
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Test mode (claims don&apos;t count toward capacity)</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.kiosk_mode}
+                  onChange={(e) => setFormData({ ...formData, kiosk_mode: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Kiosk/iPad mode (show &quot;Submit Another&quot; button after submission)</span>
               </label>
             </div>
           </div>

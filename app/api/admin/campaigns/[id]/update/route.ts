@@ -61,6 +61,11 @@ export async function PUT(
         test_mode: data.test_mode === true,
         show_banner: data.show_banner === true,
         banner_url: data.banner_url || null,
+        contact_email: data.contact_email || null,
+        contact_text: data.contact_text || null,
+        kiosk_mode: data.kiosk_mode === true,
+        starts_at: data.starts_at ? new Date(data.starts_at).toISOString() : null,
+        ends_at: data.ends_at ? new Date(data.ends_at).toISOString() : null,
         updated_at: new Date().toISOString(),
         updated_by: admin.id,
       })

@@ -15,6 +15,15 @@ interface Campaign {
   test_mode: boolean;
   show_banner: boolean;
   banner_url: string | null;
+  kiosk_mode: boolean;
+}
+
+interface Question {
+  id: string;
+  question_text: string;
+  question_type: 'text' | 'multiple_choice';
+  is_required: boolean;
+  options: string[] | null;
 }
 
 interface FormData {
@@ -33,27 +42,42 @@ interface FormData {
   inviteCode: string;
 }
 
-export default function CampaignForm({ campaign }: { campaign: Campaign }) {
-  const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
-    email: '',
-    company: '',
-    title: '',
-    phone: '',
-    address1: '',
-    address2: '',
-    city: '',
-    region: '',
-    postalCode: '',
-    country: 'US',
-    inviteCode: '',
-  });
+const initialFormData: FormData = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  company: '',
+  title: '',
+  phone: '',
+  address1: '',
+  address2: '',
+  city: '',
+  region: '',
+  postalCode: '',
+  country: 'US',
+  inviteCode: '',
+};
 
+interface Props {
+  campaign: Campaign;
+  questions?: Question[];
+}
+
+export default function CampaignForm({ campaign, questions = [] }: Props) {
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
+
+  const resetForm = () => {
+    setFormData(initialFormData);
+    setAnswers({});
+    setSuccess(false);
+    setRequiresVerification(false);
+    setError('');
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -67,11 +91,20 @@ export default function CampaignForm({ campaign }: { campaign: Campaign }) {
     setLoading(true);
     setError('');
 
+    // Validate required questions
+    for (const q of questions) {
+      if (q.is_required && !answers[q.id]?.trim()) {
+        setError(`Please answer: ${q.question_text}`);
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
       const response = await fetch(`/api/campaigns/${campaign.slug}/claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, answers }),
       });
 
       const data = await response.json();
@@ -102,13 +135,21 @@ export default function CampaignForm({ campaign }: { campaign: Campaign }) {
           </svg>
         </div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          {requiresVerification ? 'Check Your Email' : "You're All Set!"}
+          {requiresVerification ? 'Check Your Email' : 'Thank You!'}
         </h2>
         <p className="text-gray-600 mb-4">
           {requiresVerification
             ? 'Please check your email and click the verification link to confirm your claim.'
-            : "Your claim has been confirmed. We'll ship your book soon!"}
+            : "Your submission has been received. We'll be in touch soon!"}
         </p>
+        {campaign.kiosk_mode && (
+          <button
+            onClick={resetForm}
+            className="mt-6 bg-blue-600 text-white py-3 px-8 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+          >
+            Submit Another Entry
+          </button>
+        )}
       </div>
     );
   }
@@ -295,24 +336,14 @@ export default function CampaignForm({ campaign }: { campaign: Campaign }) {
 
             <div>
               <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-                Country <span className="text-red-500">*</span>
+                Country
               </label>
-              <select
-                id="country"
-                name="country"
-                required
-                value={formData.country}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              >
-                <option value="US">United States</option>
-                <option value="CA">Canada</option>
-                <option value="GB">United Kingdom</option>
-                <option value="AU">Australia</option>
-                <option value="DE">Germany</option>
-                <option value="FR">France</option>
-                <option value="OTHER">Other</option>
-              </select>
+              <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
+                United States
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                We currently only ship within the USA.
+              </p>
             </div>
           </div>
         </div>
@@ -332,6 +363,46 @@ export default function CampaignForm({ campaign }: { campaign: Campaign }) {
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
           />
+        </div>
+      )}
+
+      {/* Custom Questions */}
+      {questions.length > 0 && (
+        <div className="border-t pt-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Additional Questions</h3>
+          <div className="space-y-4">
+            {questions.map((q) => (
+              <div key={q.id}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {q.question_text} {q.is_required && <span className="text-red-500">*</span>}
+                </label>
+                {q.question_type === 'text' ? (
+                  <input
+                    type="text"
+                    value={answers[q.id] || ''}
+                    onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                ) : (
+                  <div className="space-y-2">
+                    {q.options?.map((option) => (
+                      <label key={option} className="flex items-center">
+                        <input
+                          type="radio"
+                          name={`question-${q.id}`}
+                          value={option}
+                          checked={answers[q.id] === option}
+                          onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+                          className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-gray-700">{option}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

@@ -64,7 +64,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
 
   // Check if campaign is within date window
   const now = new Date();
-  if (campaign.start_at && new Date(campaign.start_at) > now) {
+  if (campaign.starts_at && new Date(campaign.starts_at) > now) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-2xl w-full p-8">
@@ -73,13 +73,21 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             <p className="text-gray-600">
               This campaign has not started yet. Please check back later.
             </p>
+            {campaign.contact_email && (
+              <p className="text-gray-600 text-sm mt-4">
+                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+                <a href={`mailto:${campaign.contact_email}`} className="text-blue-600 hover:text-blue-700 underline">
+                  {campaign.contact_email}
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </div>
     );
   }
 
-  if (campaign.end_at && new Date(campaign.end_at) < now) {
+  if (campaign.ends_at && new Date(campaign.ends_at) < now) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-2xl w-full p-8">
@@ -88,6 +96,14 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             <p className="text-gray-600">
               This campaign has ended. Thank you for your interest.
             </p>
+            {campaign.contact_email && (
+              <p className="text-gray-600 text-sm mt-4">
+                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+                <a href={`mailto:${campaign.contact_email}`} className="text-blue-600 hover:text-blue-700 underline">
+                  {campaign.contact_email}
+                </a>
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -106,6 +122,13 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
 
     claimCount = count || 0;
   }
+
+  // Fetch custom questions
+  const { data: questions } = await supabaseAdmin
+    .from('campaign_questions')
+    .select('*')
+    .eq('campaign_id', campaign.id)
+    .order('display_order', { ascending: true });
 
   // Check if capacity is full (only if capacity is set)
   const isFull = campaign.capacity_total && claimCount >= campaign.capacity_total;
@@ -182,7 +205,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             )}
           </div>
 
-          <CampaignForm campaign={campaign} />
+          <CampaignForm campaign={campaign} questions={questions || []} />
         </div>
       </div>
     </div>

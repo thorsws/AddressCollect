@@ -178,6 +178,7 @@ export async function POST(
       country,
       inviteCode,
       claimToken, // Optional: for pre-created claims
+      answers, // Custom question answers: { questionId: answer }
     } = body;
 
     // 1. Load campaign
@@ -392,6 +393,21 @@ export async function POST(
         { error: 'Failed to create claim' },
         { status: 500 }
       );
+    }
+
+    // 12b. Save custom question answers
+    if (answers && typeof answers === 'object') {
+      const answerEntries = Object.entries(answers).filter(([, value]) => value);
+      if (answerEntries.length > 0) {
+        const answerInserts = answerEntries.map(([questionId, answer]) => ({
+          claim_id: claim.id,
+          question_id: questionId,
+          answer_text: typeof answer === 'string' ? answer : null,
+          answer_option: typeof answer === 'string' ? answer : null,
+        }));
+
+        await supabaseAdmin.from('claim_answers').insert(answerInserts);
+      }
     }
 
     // 13. Send verification email if required

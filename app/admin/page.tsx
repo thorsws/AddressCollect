@@ -56,6 +56,12 @@ export default async function AdminDashboard() {
                   Manage Users
                 </Link>
               )}
+              <Link
+                href="/admin/help"
+                className="text-sm text-gray-600 hover:text-gray-700"
+              >
+                Help
+              </Link>
               <form action="/api/admin/auth/logout" method="POST">
                 <button
                   type="submit"
