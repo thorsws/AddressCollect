@@ -294,16 +294,32 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {!isPreCreated && (
-                            <button
-                              onClick={() => toggleShipped(claim.id, !!claim.shipped_at)}
-                              className={`px-3 py-1 text-xs font-medium rounded ${
-                                claim.shipped_at
-                                  ? 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                              }`}
-                            >
-                              {claim.shipped_at ? '✓ Shipped' : 'Mark Shipped'}
-                            </button>
+                            <>
+                              {claim.shipped_at ? (
+                                <div className="flex flex-col">
+                                  <button
+                                    onClick={() => toggleShipped(claim.id, !!claim.shipped_at)}
+                                    className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800 hover:bg-blue-200"
+                                  >
+                                    ✓ Shipped
+                                  </button>
+                                  <span className="text-xs text-gray-500 mt-1">
+                                    {new Date(claim.shipped_at).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      year: 'numeric'
+                                    })}
+                                  </span>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => toggleShipped(claim.id, !!claim.shipped_at)}
+                                  className="px-3 py-1 text-xs font-medium rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                >
+                                  Mark Shipped
+                                </button>
+                              )}
+                            </>
                           )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
