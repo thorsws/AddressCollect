@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { canManageUsers } from '@/lib/admin/permissions';
+import CampaignsFilter from './CampaignsFilter';
 
 export default async function AdminDashboard() {
   const admin = await requireAdmin();
@@ -97,77 +98,12 @@ export default async function AdminDashboard() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {campaignsWithStats.map((campaign) => (
-            <div key={campaign.id} className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">{campaign.title}</h3>
-                  <p className="text-sm text-gray-500 mt-1">/c/{campaign.slug}</p>
-                </div>
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded ${
-                    campaign.is_active
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {campaign.is_active ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-
-              <div className="space-y-2 mb-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Confirmed:</span>
-                  <span className="font-semibold text-gray-900">
-                    {campaign.confirmedCount}{campaign.capacity_total ? ` / ${campaign.capacity_total}` : ' (Unlimited)'}
-                  </span>
-                </div>
-                {campaign.pendingCount > 0 && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Pending:</span>
-                    <span className="font-semibold text-yellow-600">{campaign.pendingCount}</span>
-                  </div>
-                )}
-                {campaign.capacity_total && (
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{
-                        width: `${Math.min(
-                          (campaign.confirmedCount / campaign.capacity_total) * 100,
-                          100
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex space-x-2">
-                <a
-                  href={`/admin/campaigns/${campaign.id}`}
-                  className="flex-1 text-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
-                >
-                  View Claims
-                </a>
-                <a
-                  href={`/c/${campaign.slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded hover:bg-gray-200"
-                >
-                  View Page
-                </a>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {campaignsWithStats.length === 0 && (
+        {campaignsWithStats.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center">
             <p className="text-gray-500">No campaigns yet. Create one to get started.</p>
           </div>
+        ) : (
+          <CampaignsFilter campaigns={campaignsWithStats} currentUserEmail={admin.email} />
         )}
       </main>
     </div>

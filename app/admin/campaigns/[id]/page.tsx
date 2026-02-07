@@ -90,9 +90,15 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Campaign Info */}
-        {(campaign.starts_at || campaign.ends_at) && (
+        {(campaign.starts_at || campaign.ends_at || campaign.created_by) && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex flex-wrap gap-6 text-sm">
+              {campaign.created_by && (
+                <div>
+                  <span className="font-medium text-blue-800">Created by:</span>{' '}
+                  <span className="text-blue-700">{campaign.created_by}</span>
+                </div>
+              )}
               {campaign.starts_at && (
                 <div>
                   <span className="font-medium text-blue-800">Starts:</span>{' '}
