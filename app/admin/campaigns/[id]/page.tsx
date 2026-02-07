@@ -7,7 +7,6 @@ import PreCreateClaimForm from './PreCreateClaimForm';
 import DeleteCampaignButton from './DeleteCampaignButton';
 import CampaignQRCode from './CampaignQRCode';
 import PreviewCampaignButton from './PreviewCampaignButton';
-import LogoToggle from './LogoToggle';
 
 export default async function CampaignDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -122,9 +121,6 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                 <span className="text-blue-700">{new Date(campaign.ends_at).toLocaleString()}</span>
               </div>
             )}
-            <div className="ml-auto">
-              <LogoToggle campaignId={campaign.id} initialValue={campaign.show_logo} />
-            </div>
           </div>
           {campaign.notes && (
             <div className="mt-4 pt-4 border-t border-blue-200">
