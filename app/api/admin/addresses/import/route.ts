@@ -415,11 +415,13 @@ export async function POST(request: NextRequest) {
         }
 
         // Insert claim
+        // Note: Status should always be 'confirmed' for imported addresses
+        // Use shipped_at to track whether it's been shipped
         const { error: insertError } = await supabaseAdmin
           .from('claims')
           .insert({
             campaign_id: campaign.id,
-            status: status,
+            status: 'confirmed', // Always confirmed for imports
             first_name: row.firstName.trim(),
             last_name: row.lastName.trim(),
             email: row.email ? row.email.trim() : null,
@@ -434,7 +436,7 @@ export async function POST(request: NextRequest) {
             country: row.country.trim(),
             email_normalized: row.email ? normalizeEmail(row.email) : null,
             address_fingerprint: addressFingerprint,
-            confirmed_at: status === 'confirmed' || status === 'shipped' ? new Date().toISOString() : null,
+            confirmed_at: new Date().toISOString(),
             shipped_at: shippedAt,
           });
 
