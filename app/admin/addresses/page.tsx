@@ -36,7 +36,7 @@ export default async function AllAddressesPage() {
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-4">
               <a href="/admin" className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
-                <img src="/cognitive-kin-logo.png" alt="Cognitive Kin" className="h-6 w-auto" />
+                <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-6 w-auto" />
                 <span>← Dashboard</span>
               </a>
               <span className="text-gray-300">|</span>

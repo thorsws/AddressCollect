@@ -45,7 +45,7 @@ export default async function AdminDashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-3">
-              <img src="/cognitive-kin-logo.png" alt="Cognitive Kin" className="h-8 w-auto" />
+              <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-8 w-auto" />
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
