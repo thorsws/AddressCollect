@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "Cognitive Kin Book Campaign Dashboard",
   description: "Collect addresses for Cognitive Kin book giveaway campaigns",
   icons: {
-    icon: '/logo.png',
+    icon: '/favicon.png',
   },
 };
 
