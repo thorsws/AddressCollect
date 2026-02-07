@@ -227,7 +227,7 @@ export default function ImportAddressesPage() {
                 <option value="5">Row 6 (skip 5 rows)</option>
               </select>
               <p className="mt-1 text-sm text-gray-500">
-                Auto-detect finds the header row automatically by looking for column names like "Full Name", "Email", "City"
+                Auto-detect finds the header row automatically by looking for column names like &quot;Full Name&quot;, &quot;Email&quot;, &quot;City&quot;
               </p>
             </div>
 
