@@ -35,8 +35,9 @@ export default async function AllAddressesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-4">
-              <a href="/admin" className="text-blue-600 hover:text-blue-700">
-                ← Back to Dashboard
+              <a href="/admin" className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
+                <img src="/logo.png" alt="Cognitive Kin" className="h-8 w-auto" />
+                <span>← Dashboard</span>
               </a>
               <span className="text-gray-300">|</span>
               <h1 className="text-xl font-bold text-gray-900">All Addresses</h1>

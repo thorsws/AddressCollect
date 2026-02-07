@@ -44,7 +44,10 @@ export default async function AdminDashboard() {
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold text-gray-900">Admin Dashboard</h1>
+            <div className="flex items-center space-x-3">
+              <img src="/logo.png" alt="Cognitive Kin" className="h-10 w-auto" />
+              <h1 className="text-xl font-bold text-gray-900">Cognitive Kin Book Campaign Dashboard</h1>
+            </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">
                 {admin.name} ({admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Viewer'})

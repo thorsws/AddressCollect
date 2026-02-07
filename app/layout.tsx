@@ -2,8 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Campaign Giveaway",
-  description: "Collect addresses for campaign giveaways",
+  title: "Cognitive Kin Book Campaign Dashboard",
+  description: "Collect addresses for Cognitive Kin book giveaway campaigns",
+  icons: {
+    icon: '/logo.png',
+  },
 };
 
 export default function RootLayout({
