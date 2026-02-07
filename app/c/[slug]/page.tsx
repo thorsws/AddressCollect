@@ -3,6 +3,39 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import CampaignForm from './CampaignForm';
 import BannerPreview from './BannerPreview';
 import ReactMarkdown from 'react-markdown';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+
+  const { data: campaign } = await supabaseAdmin
+    .from('campaigns')
+    .select('title, description')
+    .eq('slug', slug)
+    .single();
+
+  if (!campaign) {
+    return {
+      title: 'Campaign Not Found',
+    };
+  }
+
+  return {
+    title: campaign.title,
+    description: campaign.description || `Claim your spot for ${campaign.title}`,
+    openGraph: {
+      title: campaign.title,
+      description: campaign.description || `Claim your spot for ${campaign.title}`,
+      siteName: 'Cognitive Kin',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: campaign.title,
+      description: campaign.description || `Claim your spot for ${campaign.title}`,
+    },
+  };
+}
 
 export default async function CampaignPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
