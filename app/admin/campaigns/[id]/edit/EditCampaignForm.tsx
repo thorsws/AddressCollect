@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import LogoToggle from '../LogoToggle';
 
 const QuestionsManager = dynamic(() => import('../QuestionsManager'), { ssr: false });
 
@@ -29,6 +30,7 @@ interface Campaign {
   test_mode: boolean;
   show_banner: boolean;
   banner_url: string | null;
+  show_logo: boolean;
   contact_email: string | null;
   contact_text: string | null;
   kiosk_mode: boolean;
@@ -123,12 +125,15 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
               <h1 className="text-xl font-bold text-gray-900">Edit Campaign</h1>
               <p className="text-sm text-gray-500">{campaign.slug}</p>
             </div>
-            <a
-              href={`/admin/campaigns/${campaign.id}`}
-              className="text-sm text-blue-600 hover:text-blue-700"
-            >
-              ← Back to Campaign
-            </a>
+            <div className="flex items-center space-x-4">
+              <LogoToggle campaignId={campaign.id} initialValue={campaign.show_logo} />
+              <a
+                href={`/admin/campaigns/${campaign.id}`}
+                className="text-sm text-blue-600 hover:text-blue-700"
+              >
+                ← Back to Campaign
+              </a>
+            </div>
           </div>
         </div>
       </nav>
