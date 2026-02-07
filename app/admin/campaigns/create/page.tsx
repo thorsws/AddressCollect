@@ -31,6 +31,7 @@ export default function CreateCampaign() {
     test_mode: false,
     show_banner: true,
     banner_url: 'https://cognitivekin.com',
+    show_logo: false,
     contact_email: '',
     contact_text: 'If you have any questions, please email',
   });
@@ -485,6 +486,25 @@ export default function CreateCampaign() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Logo Display */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Branding</h2>
+            <div className="space-y-3">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.show_logo}
+                  onChange={(e) => setFormData({ ...formData, show_logo: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show Cognitive Kin logo on campaign page</span>
+              </label>
+              <p className="text-xs text-gray-500 ml-6">
+                Display the Cognitive Kin logo at the top of your campaign landing page
+              </p>
             </div>
           </div>
 

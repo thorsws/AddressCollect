@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
         test_mode: data.test_mode === true,
         show_banner: data.show_banner === true,
         banner_url: data.banner_url || null,
+        show_logo: data.show_logo === true,
         created_by: admin.id,
         updated_by: admin.id,
       })
