@@ -76,24 +76,22 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
         {filteredCampaigns.map((campaign) => (
           <div key={campaign.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
             <div className="mb-4">
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{campaign.title}</h3>
-                <div className="flex gap-1.5 ml-2 flex-shrink-0">
-                  <span
-                    className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
-                      campaign.is_active
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-600'
-                    }`}
-                  >
-                    {campaign.is_active ? 'Active' : 'Inactive'}
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">{campaign.title}</h3>
+              <div className="flex gap-1.5 mb-2">
+                <span
+                  className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
+                    campaign.is_active
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-gray-100 text-gray-600'
+                  }`}
+                >
+                  {campaign.is_active ? 'Active' : 'Inactive'}
+                </span>
+                {campaign.test_mode && (
+                  <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                    Test
                   </span>
-                  {campaign.test_mode && (
-                    <span className="px-2.5 py-0.5 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
-                      Test
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
               <p className="text-sm text-gray-500">/c/{campaign.slug}</p>
               {campaign.creatorEmail && (

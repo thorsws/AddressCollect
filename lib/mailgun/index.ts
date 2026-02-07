@@ -167,11 +167,11 @@ export async function sendInviteEmail(
 
   const roleDisplay = role === 'super_admin' ? 'Super Admin' : role === 'admin' ? 'Admin' : 'Viewer';
 
-  const subject = 'Welcome to AddressCollect Admin';
+  const subject = 'Welcome to Claim Your Cognitive Kin Admin';
   const text = `
 Hi ${name},
 
-You've been invited to join AddressCollect as an ${roleDisplay}.
+You've been invited to join Claim Your Cognitive Kin as an ${roleDisplay}.
 
 To get started, visit the admin login page:
 ${loginUrl}

@@ -58,7 +58,7 @@ export default function EnhancedHelpPage() {
       {showTour && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-xl p-8 max-w-md">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome to AddressCollect! 👋</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Claim Your Cognitive Kin! 👋</h2>
             <div className="space-y-3 text-gray-700 mb-6">
               <p>This help page includes:</p>
               <ul className="list-disc list-inside space-y-2 ml-4">
@@ -138,7 +138,7 @@ export default function EnhancedHelpPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">🚀 Quick Start Guide</h2>
               <div className="space-y-4 text-gray-700">
                 <p>
-                  AddressCollect helps you collect shipping addresses through customizable campaign pages.
+                  Claim Your Cognitive Kin helps you collect shipping addresses through customizable campaign pages.
                   Perfect for book giveaways, raffles, and promotional campaigns.
                 </p>
                 <ol className="list-decimal list-inside space-y-2 ml-4">
