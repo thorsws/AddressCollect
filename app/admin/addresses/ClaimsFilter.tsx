@@ -31,90 +31,156 @@ interface Props {
   claims: Claim[];
 }
 
-export default function ClaimsFilter({ claims }: Props) {
-  const [showTest, setShowTest] = useState(false); // Default: hide test claims
+export default function ClaimsFilter({ claims: initialClaims }: Props) {
+  const [claims, setClaims] = useState(initialClaims);
+  const [showTest, setShowTest] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [shippedFilter, setShippedFilter] = useState<string>('all'); // all, shipped, not-shipped
-  const [preCreatedFilter, setPreCreatedFilter] = useState<string>('all'); // all, pre-created, regular
+  const [shippedFilter, setShippedFilter] = useState<string>('all');
+  const [preCreatedFilter, setPreCreatedFilter] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>(''); // Filter by sent date
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
 
   // Apply filters
   const filteredClaims = claims.filter(claim => {
-    // Test filter
     if (!showTest && claim.is_test_claim) return false;
-
-    // Status filter
     if (statusFilter === 'confirmed' && claim.status !== 'confirmed') return false;
     if (statusFilter === 'pending' && claim.status !== 'pending') return false;
     if (statusFilter === 'rejected' && claim.status !== 'rejected') return false;
-
-    // Shipped filter
     if (shippedFilter === 'shipped' && !claim.shipped_at) return false;
     if (shippedFilter === 'not-shipped' && claim.shipped_at) return false;
 
-    // Pre-created filter
     const isPreCreated = claim.claim_token && !claim.address1;
     if (preCreatedFilter === 'pre-created' && !isPreCreated) return false;
     if (preCreatedFilter === 'regular' && isPreCreated) return false;
 
+    // Date filter - filter by sent date
+    if (dateFilter) {
+      if (!claim.shipped_at) return false;
+      const sentDate = new Date(claim.shipped_at).toISOString().split('T')[0];
+      if (sentDate !== dateFilter) return false;
+    }
+
     return true;
   });
 
-  // Count stats
   const testCount = claims.filter(c => c.is_test_claim).length;
 
+  // Selection handlers
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredClaims.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredClaims.map(c => c.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+  };
+
+  // Bulk update - mark selected as sent
+  const bulkMarkAsSent = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Mark ${selectedIds.size} claim(s) as sent?`)) return;
+
+    setBulkUpdating(true);
+    try {
+      const response = await fetch('/api/admin/claims/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          claimIds: Array.from(selectedIds),
+          shipped_at: new Date().toISOString(),
+        }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        const now = new Date().toISOString();
+        setClaims(claims.map(c =>
+          selectedIds.has(c.id) ? { ...c, shipped_at: now } : c
+        ));
+        setSelectedIds(new Set());
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to update claims');
+      }
+    } catch (error) {
+      console.error('Bulk update error:', error);
+      alert('Failed to update claims');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  // Bulk update - clear sent date
+  const bulkClearSent = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Clear sent date for ${selectedIds.size} claim(s)?`)) return;
+
+    setBulkUpdating(true);
+    try {
+      const response = await fetch('/api/admin/claims/bulk-update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          claimIds: Array.from(selectedIds),
+          shipped_at: null,
+        }),
+      });
+
+      if (response.ok) {
+        setClaims(claims.map(c =>
+          selectedIds.has(c.id) ? { ...c, shipped_at: null } : c
+        ));
+        setSelectedIds(new Set());
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to update claims');
+      }
+    } catch (error) {
+      console.error('Bulk update error:', error);
+      alert('Failed to update claims');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
   const exportFilteredClaims = () => {
-    // Create CSV content
     const headers = [
-      'Campaign',
-      'Status',
-      'First Name',
-      'Last Name',
-      'Email',
-      'Company',
-      'Title',
-      'Phone',
-      'Address 1',
-      'Address 2',
-      'City',
-      'State/Region',
-      'Postal Code',
-      'Country',
-      'Created Date',
-      'Sent Date',
-      'Is Test',
-      'Is Pre-Created'
+      'Campaign', 'Status', 'First Name', 'Last Name', 'Email', 'Company',
+      'Title', 'Phone', 'Address 1', 'Address 2', 'City', 'State/Region',
+      'Postal Code', 'Country', 'Created Date', 'Sent Date', 'Is Test', 'Is Pre-Created'
     ];
 
     const rows = filteredClaims.map(claim => {
       const isPreCreated = claim.claim_token && !claim.address1;
       return [
-        claim.campaigns?.title || '',
-        claim.status,
-        claim.first_name,
-        claim.last_name,
-        claim.email || '',
-        claim.company || '',
-        claim.title || '',
-        claim.phone || '',
-        claim.address1 || '',
-        claim.address2 || '',
-        claim.city || '',
-        claim.region || '',
-        claim.postal_code || '',
-        claim.country || '',
+        claim.campaigns?.title || '', claim.status, claim.first_name, claim.last_name,
+        claim.email || '', claim.company || '', claim.title || '', claim.phone || '',
+        claim.address1 || '', claim.address2 || '', claim.city || '', claim.region || '',
+        claim.postal_code || '', claim.country || '',
         new Date(claim.created_at).toLocaleDateString(),
         claim.shipped_at ? new Date(claim.shipped_at).toLocaleDateString() : '',
-        claim.is_test_claim ? 'Yes' : 'No',
-        isPreCreated ? 'Yes' : 'No'
+        claim.is_test_claim ? 'Yes' : 'No', isPreCreated ? 'Yes' : 'No'
       ];
     });
 
-    // Generate CSV
     const csvContent = [
       headers.join(','),
       ...rows.map(row =>
         row.map(cell => {
-          // Escape quotes and wrap in quotes if contains comma, quote, or newline
           const cellStr = String(cell);
           if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
             return `"${cellStr.replace(/"/g, '""')}"`;
@@ -124,17 +190,19 @@ export default function ClaimsFilter({ claims }: Props) {
       )
     ].join('\n');
 
-    // Download CSV
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `filtered-addresses-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
+    link.href = URL.createObjectURL(blob);
+    link.download = `filtered-addresses-${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
-    document.body.removeChild(link);
   };
+
+  // Get unique sent dates for quick filter
+  const sentDates = Array.from(new Set(
+    claims
+      .filter(c => c.shipped_at)
+      .map(c => new Date(c.shipped_at!).toISOString().split('T')[0])
+  )).sort().reverse();
 
   return (
     <>
@@ -168,6 +236,24 @@ export default function ClaimsFilter({ claims }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
+          <label className="text-sm font-medium text-gray-700">Sent Date:</label>
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">All Dates</option>
+            {sentDates.map(date => (
+              <option key={date} value={date}>
+                {new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+                  month: 'short', day: 'numeric', year: 'numeric'
+                })}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex items-center gap-2">
           <label className="text-sm font-medium text-gray-700">Type:</label>
           <select
             value={preCreatedFilter}
@@ -187,9 +273,7 @@ export default function ClaimsFilter({ claims }: Props) {
             onChange={(e) => setShowTest(e.target.checked)}
             className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
           />
-          <span className="text-gray-700">
-            Show test claims ({testCount})
-          </span>
+          <span className="text-gray-700">Show test claims ({testCount})</span>
         </label>
 
         <div className="ml-auto flex items-center gap-4">
@@ -199,20 +283,60 @@ export default function ClaimsFilter({ claims }: Props) {
           <button
             onClick={exportFilteredClaims}
             disabled={filteredClaims.length === 0}
-            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 disabled:opacity-50"
           >
             Export Filtered ({filteredClaims.length})
           </button>
         </div>
       </div>
 
+      {/* Bulk Actions Bar */}
+      {selectedIds.size > 0 && (
+        <div className="px-6 py-3 bg-blue-50 border-b border-blue-200 flex items-center gap-4">
+          <span className="text-sm font-medium text-blue-800">
+            {selectedIds.size} selected
+          </span>
+          <button
+            onClick={bulkMarkAsSent}
+            disabled={bulkUpdating}
+            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
+          >
+            {bulkUpdating ? 'Updating...' : 'Mark as Sent'}
+          </button>
+          <button
+            onClick={bulkClearSent}
+            disabled={bulkUpdating}
+            className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 disabled:opacity-50"
+          >
+            Clear Sent Date
+          </button>
+          <button
+            onClick={clearSelection}
+            className="px-3 py-1 text-blue-600 text-sm hover:text-blue-800"
+          >
+            Clear Selection
+          </button>
+        </div>
+      )}
+
       {/* Table */}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
+              <th className="px-4 py-3 text-left">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.size === filteredClaims.length && filteredClaims.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Campaign
+                Sent
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Date
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Status
@@ -233,26 +357,42 @@ export default function ClaimsFilter({ claims }: Props) {
                 Postal
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Sent
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Date
+                Campaign
               </th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredClaims.map((claim) => {
               const isPreCreated = claim.claim_token && !claim.address1;
+              const isSelected = selectedIds.has(claim.id);
               return (
                 <tr
                   key={claim.id}
-                  className={`${isPreCreated ? 'bg-orange-50' : ''} ${claim.is_test_claim ? 'bg-purple-50' : ''}`}
+                  className={`${isPreCreated ? 'bg-orange-50' : ''} ${claim.is_test_claim ? 'bg-purple-50' : ''} ${isSelected ? 'bg-blue-50' : ''}`}
                 >
-                  <td className="px-4 py-4 whitespace-nowrap text-sm">
-                    <div>
-                      <div className="font-medium text-gray-900">{claim.campaigns?.title}</div>
-                      <div className="text-gray-500 text-xs">/{claim.campaigns?.slug}</div>
-                    </div>
+                  <td className="px-4 py-4">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelect(claim.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    {!isPreCreated && claim.shipped_at ? (
+                      <span className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
+                        ✓ Sent
+                      </span>
+                    ) : !isPreCreated ? (
+                      <span className="text-gray-400 text-xs">-</span>
+                    ) : null}
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {!isPreCreated && claim.shipped_at ? (
+                      new Date(claim.shipped_at).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric'
+                      })
+                    ) : null}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="flex flex-col gap-1">
@@ -303,21 +443,11 @@ export default function ClaimsFilter({ claims }: Props) {
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                     {isPreCreated ? '-' : claim.postal_code}
                   </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    {!isPreCreated && claim.shipped_at && (
-                      <span className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
-                        ✓ Sent
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {!isPreCreated && claim.shipped_at && (
-                      new Date(claim.shipped_at).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })
-                    )}
+                  <td className="px-4 py-4 whitespace-nowrap text-sm">
+                    <div>
+                      <div className="font-medium text-gray-900">{claim.campaigns?.title}</div>
+                      <div className="text-gray-500 text-xs">/{claim.campaigns?.slug}</div>
+                    </div>
                   </td>
                 </tr>
               );
