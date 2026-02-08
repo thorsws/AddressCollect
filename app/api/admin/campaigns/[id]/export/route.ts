@@ -34,10 +34,17 @@ export async function GET(
     );
   }
 
-  // Fetch all claims for this campaign
+  // Fetch all claims for this campaign with their answers
   const { data: claims, error: claimsError } = await supabaseAdmin
     .from('claims')
-    .select('*')
+    .select(`
+      *,
+      claim_answers (
+        question_id,
+        answer_text,
+        answer_option
+      )
+    `)
     .eq('campaign_id', id)
     .order('created_at', { ascending: false });
 
@@ -48,8 +55,15 @@ export async function GET(
     );
   }
 
+  // Fetch questions for this campaign
+  const { data: questions } = await supabaseAdmin
+    .from('campaign_questions')
+    .select('id, question_text, question_type')
+    .eq('campaign_id', id)
+    .order('display_order', { ascending: true });
+
   // Generate CSV
-  const headers = [
+  const baseHeaders = [
     'Campaign Slug',
     'Status',
     'Test Claim',
@@ -70,26 +84,55 @@ export async function GET(
     'Confirmed At',
   ];
 
-  const rows = claims?.map(claim => [
-    campaign.slug,
-    claim.status,
-    claim.is_test_claim ? 'Yes' : 'No',
-    claim.first_name,
-    claim.last_name,
-    claim.email || '',
-    claim.company || '',
-    claim.title || '',
-    claim.phone || '',
-    claim.address1,
-    claim.address2 || '',
-    claim.city,
-    claim.region,
-    claim.postal_code,
-    claim.country,
-    claim.invite_code || '',
-    claim.created_at,
-    claim.confirmed_at || '',
-  ]) || [];
+  // Add question columns to headers
+  const questionHeaders = questions?.map(q => q.question_text) || [];
+  const headers = [...baseHeaders, ...questionHeaders];
+
+  const rows = claims?.map(claim => {
+    // Base claim data
+    const baseRow = [
+      campaign.slug,
+      claim.status,
+      claim.is_test_claim ? 'Yes' : 'No',
+      claim.first_name,
+      claim.last_name,
+      claim.email || '',
+      claim.company || '',
+      claim.title || '',
+      claim.phone || '',
+      claim.address1,
+      claim.address2 || '',
+      claim.city,
+      claim.region,
+      claim.postal_code,
+      claim.country,
+      claim.invite_code || '',
+      claim.created_at,
+      claim.confirmed_at || '',
+    ];
+
+    // Add answers for each question
+    const answerValues = questions?.map(q => {
+      const answer = claim.claim_answers?.find((a: any) => a.question_id === q.id);
+      if (!answer) return '';
+
+      // For checkboxes stored as JSON array, parse and join
+      if (answer.answer_text) {
+        try {
+          const parsed = JSON.parse(answer.answer_text);
+          if (Array.isArray(parsed)) {
+            return parsed.join('; ');
+          }
+        } catch {
+          // Not JSON, return as-is
+        }
+        return answer.answer_text;
+      }
+      return answer.answer_option || '';
+    }) || [];
+
+    return [...baseRow, ...answerValues];
+  }) || [];
 
   // Escape CSV values
   const escapeCsvValue = (value: string) => {

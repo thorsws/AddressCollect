@@ -477,12 +477,18 @@ export async function POST(
 
     // 12b. Save custom question answers
     if (answers && typeof answers === 'object') {
-      const answerEntries = Object.entries(answers).filter(([, value]) => value);
+      const answerEntries = Object.entries(answers).filter(([, value]) => {
+        // Filter out empty values (empty strings or empty arrays)
+        if (Array.isArray(value)) return value.length > 0;
+        return value && String(value).trim();
+      });
       if (answerEntries.length > 0) {
         const answerInserts = answerEntries.map(([questionId, answer]) => ({
           claim_id: claim.id,
           question_id: questionId,
-          answer_text: typeof answer === 'string' ? answer : null,
+          // For arrays (checkboxes), store as JSON string in answer_text
+          answer_text: Array.isArray(answer) ? JSON.stringify(answer) : (typeof answer === 'string' ? answer : null),
+          // answer_option is for single-select multiple_choice only
           answer_option: typeof answer === 'string' ? answer : null,
         }));
 
