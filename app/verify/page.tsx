@@ -81,7 +81,7 @@ export default async function VerifyPage({ searchParams }: { searchParams: Promi
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h1>
         <p className="text-gray-600 mb-6">
-          Your email has been verified and your claim is confirmed. We&apos;ll ship your book soon!
+          Your email has been verified and your claim is confirmed. Thank you for registering!
         </p>
       </div>
     </div>
