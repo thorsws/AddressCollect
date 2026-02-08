@@ -13,6 +13,7 @@ interface Campaign {
   collect_phone: boolean;
   collect_title: boolean;
   test_mode: boolean;
+  contact_email: string | null;
 }
 
 interface PrefilledData {
@@ -75,6 +76,7 @@ export default function TokenClaimForm({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -145,10 +147,10 @@ export default function TokenClaimForm({
       )}
 
       {/* Name Fields */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
-            First Name *
+          <label htmlFor="firstName" className="block text-base font-semibold text-gray-700 mb-2">
+            First Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -157,13 +159,13 @@ export default function TokenClaimForm({
             required
             value={formData.firstName}
             onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
-            Last Name *
+          <label htmlFor="lastName" className="block text-base font-semibold text-gray-700 mb-2">
+            Last Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -172,7 +174,7 @@ export default function TokenClaimForm({
             required
             value={formData.lastName}
             onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
@@ -180,8 +182,8 @@ export default function TokenClaimForm({
       {/* Email */}
       {campaign.require_email && (
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email *
+          <label htmlFor="email" className="block text-base font-semibold text-gray-700 mb-2">
+            Email <span className="text-red-500">*</span>
           </label>
           <input
             type="email"
@@ -190,7 +192,7 @@ export default function TokenClaimForm({
             required={campaign.require_email}
             value={formData.email}
             onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
@@ -198,8 +200,8 @@ export default function TokenClaimForm({
       {/* Optional Fields */}
       {campaign.collect_company && (
         <div>
-          <label htmlFor="company" className="block text-sm font-medium text-gray-700">
-            Company
+          <label htmlFor="company" className="block text-base font-semibold text-gray-700 mb-2">
+            Company / Organization
           </label>
           <input
             type="text"
@@ -207,15 +209,15 @@ export default function TokenClaimForm({
             id="company"
             value={formData.company}
             onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
 
       {campaign.collect_title && (
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-            Title
+          <label htmlFor="title" className="block text-base font-semibold text-gray-700 mb-2">
+            Role / Title
           </label>
           <input
             type="text"
@@ -223,15 +225,15 @@ export default function TokenClaimForm({
             id="title"
             value={formData.title}
             onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
 
       {campaign.collect_phone && (
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
-            Phone
+          <label htmlFor="phone" className="block text-base font-semibold text-gray-700 mb-2">
+            Phone Number
           </label>
           <input
             type="tel"
@@ -239,114 +241,113 @@ export default function TokenClaimForm({
             id="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
 
       {/* Address Fields */}
-      <div>
-        <label htmlFor="address1" className="block text-sm font-medium text-gray-700">
-          Address Line 1 *
-        </label>
-        <input
-          type="text"
-          name="address1"
-          id="address1"
-          required
-          value={formData.address1}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
-        />
-      </div>
+      <div className="border-t pt-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-6">Shipping Address</h3>
 
-      <div>
-        <label htmlFor="address2" className="block text-sm font-medium text-gray-700">
-          Address Line 2
-        </label>
-        <input
-          type="text"
-          name="address2"
-          id="address2"
-          value={formData.address2}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
-        />
-      </div>
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="address1" className="block text-base font-semibold text-gray-700 mb-2">
+              Street Address <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="address1"
+              id="address1"
+              required
+              value={formData.address1}
+              onChange={handleChange}
+              className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-        <div className="sm:col-span-1">
-          <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-            City *
-          </label>
-          <input
-            type="text"
-            name="city"
-            id="city"
-            required
-            value={formData.city}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
-          />
+          <div>
+            <label htmlFor="address2" className="block text-base font-semibold text-gray-700 mb-2">
+              Apartment, Suite, etc. (optional)
+            </label>
+            <input
+              type="text"
+              name="address2"
+              id="address2"
+              value={formData.address2}
+              onChange={handleChange}
+              className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="city" className="block text-base font-semibold text-gray-700 mb-2">
+                City <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="city"
+                id="city"
+                required
+                value={formData.city}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="region" className="block text-base font-semibold text-gray-700 mb-2">
+                State / Province <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="region"
+                id="region"
+                required
+                value={formData.region}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="postalCode" className="block text-base font-semibold text-gray-700 mb-2">
+                Postal Code <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="postalCode"
+                id="postalCode"
+                required
+                value={formData.postalCode}
+                onChange={handleChange}
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="country" className="block text-base font-semibold text-gray-700 mb-2">
+                Country
+              </label>
+              <div className="w-full px-4 py-3 text-base border border-gray-200 rounded-md bg-gray-50 text-gray-700 font-medium">
+                United States
+              </div>
+              <p className="text-sm text-gray-600 mt-2">
+                We currently only ship within the USA.
+              </p>
+            </div>
+          </div>
         </div>
-
-        <div className="sm:col-span-1">
-          <label htmlFor="region" className="block text-sm font-medium text-gray-700">
-            State/Region *
-          </label>
-          <input
-            type="text"
-            name="region"
-            id="region"
-            required
-            value={formData.region}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
-          />
-        </div>
-
-        <div className="sm:col-span-1">
-          <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700">
-            Postal Code *
-          </label>
-          <input
-            type="text"
-            name="postalCode"
-            id="postalCode"
-            required
-            value={formData.postalCode}
-            onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label htmlFor="country" className="block text-sm font-medium text-gray-700">
-          Country *
-        </label>
-        <select
-          name="country"
-          id="country"
-          required
-          value={formData.country}
-          onChange={handleChange}
-          className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border"
-        >
-          <option value="US">United States</option>
-          <option value="CA">Canada</option>
-          <option value="GB">United Kingdom</option>
-          <option value="AU">Australia</option>
-          <option value="DE">Germany</option>
-          <option value="FR">France</option>
-        </select>
       </div>
 
       {/* Invite Code */}
       {campaign.require_invite_code && (
         <div>
-          <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700">
-            Invite Code *
+          <label htmlFor="inviteCode" className="block text-base font-semibold text-gray-700 mb-2">
+            Invite Code <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -355,21 +356,38 @@ export default function TokenClaimForm({
             required={campaign.require_invite_code}
             value={formData.inviteCode}
             onChange={handleChange}
-            className="mt-1 block w-full rounded border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-3 py-2 border uppercase"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase"
           />
         </div>
       )}
 
-      {/* Submit Button */}
-      <div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loading ? 'Submitting...' : 'Submit Claim'}
-        </button>
+      {/* Consent Checkbox */}
+      <div className="border-t pt-6">
+        <label className="flex items-start">
+          <input
+            type="checkbox"
+            checked={consent}
+            onChange={(e) => setConsent(e.target.checked)}
+            className="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
+            required
+          />
+          <span className="ml-3 text-base text-gray-700 leading-relaxed">
+            I consent to providing my information for <strong>{campaign.title}</strong>. I understand my data will be used solely for this purpose,
+            stored securely, and deleted within 60 days. I can request deletion at any time by contacting{' '}
+            {campaign.contact_email || 'the organizer'}.
+            {' '}<span className="text-red-500">*</span>
+          </span>
+        </label>
       </div>
+
+      {/* Submit Button */}
+      <button
+        type="submit"
+        disabled={loading || !consent}
+        className="w-full bg-blue-600 text-white py-4 px-6 rounded-md text-lg font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      >
+        {loading ? 'Submitting...' : 'Submit Claim'}
+      </button>
     </form>
   );
 }

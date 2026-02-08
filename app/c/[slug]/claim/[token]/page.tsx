@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import ReactMarkdown from 'react-markdown';
 
 interface PreClaimPageProps {
   params: Promise<{ slug: string; token: string }>;
@@ -53,17 +54,27 @@ export default async function PreClaimPage({ params }: PreClaimPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{campaign.title}</h1>
+    <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 md:p-10">
+          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">{campaign.title}</h1>
           {campaign.description && (
-            <p className="text-gray-600 mb-6">{campaign.description}</p>
+            <div className="text-gray-700 mb-6 prose prose-base sm:prose-lg max-w-none">
+              <ReactMarkdown>{campaign.description}</ReactMarkdown>
+            </div>
           )}
 
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
-            <p className="text-sm text-blue-800">
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-blue-800 text-base">
               <strong>Note:</strong> This form has been pre-filled for you. Please review and update any information as needed before submitting.
+            </p>
+          </div>
+
+          <div className="bg-green-50 border border-green-200 rounded-lg p-5 mb-6">
+            <h3 className="text-green-900 font-bold text-lg mb-2">Privacy Promise</h3>
+            <p className="text-green-800 text-base font-medium">
+              {campaign.privacy_blurb ||
+                "We only use your address to ship the book. We won't sell your information."}
             </p>
           </div>
 
