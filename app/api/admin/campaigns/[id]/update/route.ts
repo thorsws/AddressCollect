@@ -62,6 +62,7 @@ export async function PUT(
         max_claims_per_address: parseInt(data.max_claims_per_address) || 1,
         test_mode: data.test_mode === true,
         show_banner: data.show_banner === true,
+        show_logo: data.show_logo === true,
         banner_url: data.banner_url !== undefined ? data.banner_url : null,
         contact_email: data.contact_email !== undefined ? data.contact_email : null,
         contact_text: data.contact_text !== undefined ? data.contact_text : null,
