@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { supabaseAdmin } from '@/lib/supabase/server';
 
 interface PreClaimPageProps {
   params: Promise<{ slug: string; token: string }>;
@@ -7,22 +8,53 @@ interface PreClaimPageProps {
 export default async function PreClaimPage({ params }: PreClaimPageProps) {
   const { slug, token } = await params;
 
-  // Fetch pre-created claim data
-  const response = await fetch(
-    `${process.env.APP_BASE_URL || 'http://localhost:3000'}/api/campaigns/${slug}/claim/${token}`,
-    { cache: 'no-store' }
-  );
+  // Fetch campaign by slug
+  const { data: campaign, error: campaignError } = await supabaseAdmin
+    .from('campaigns')
+    .select('*')
+    .eq('slug', slug)
+    .single();
 
-  if (!response.ok) {
+  if (campaignError || !campaign) {
     notFound();
   }
 
-  const { campaign, claim } = await response.json();
+  // Fetch pre-created claim by token
+  const { data: claim, error: claimError } = await supabaseAdmin
+    .from('claims')
+    .select('*')
+    .eq('claim_token', token)
+    .eq('campaign_id', campaign.id)
+    .single();
+
+  if (claimError || !claim) {
+    notFound();
+  }
+
+  // If claim already has an address, show already submitted message
+  if (claim.address1) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto">
+          <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            <div className="mb-4">
+              <svg className="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Already Submitted</h1>
+            <p className="text-gray-600">
+              This claim has already been completed. Thank you!
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
-        {/* Import the CampaignForm component and pass prefilled data */}
         <div className="bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">{campaign.title}</h1>
           {campaign.description && (
@@ -35,7 +67,6 @@ export default async function PreClaimPage({ params }: PreClaimPageProps) {
             </p>
           </div>
 
-          {/* We'll import the existing CampaignForm and pass prefilled data */}
           <TokenClaimForm
             campaign={campaign}
             prefilledData={claim}
@@ -47,5 +78,4 @@ export default async function PreClaimPage({ params }: PreClaimPageProps) {
   );
 }
 
-// Import the form component we'll create
 import TokenClaimForm from './TokenClaimForm';
