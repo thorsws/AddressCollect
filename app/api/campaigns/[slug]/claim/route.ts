@@ -171,7 +171,7 @@ async function handlePreCreatedClaim(
         expires_at: expiresAt,
       });
 
-    const verificationLink = `${process.env.PUBLIC_CAMPAIGN_URL || process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
+    const verificationLink = `${process.env.NEXT_PUBLIC_CAMPAIGN_URL || process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
     try {
       await sendClaimVerificationEmail(email, verificationLink, campaign.title);
     } catch (emailError) {
@@ -506,7 +506,7 @@ export async function POST(
         });
 
       // Send email
-      const verificationLink = `${process.env.PUBLIC_CAMPAIGN_URL || process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
+      const verificationLink = `${process.env.NEXT_PUBLIC_CAMPAIGN_URL || process.env.APP_BASE_URL || 'http://localhost:3000'}/verify?token=${verificationToken}`;
       try {
         await sendClaimVerificationEmail(email, verificationLink, campaign.title);
       } catch (emailError) {
