@@ -33,7 +33,16 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
   const [showTestClaims, setShowTestClaims] = useState(true);
   const [expandedClaimId, setExpandedClaimId] = useState<string | null>(null);
   const [editingNotes, setEditingNotes] = useState<{[key: string]: string}>({});
+  const [editingPreCreated, setEditingPreCreated] = useState<{[key: string]: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    company?: string;
+    title?: string;
+    phone?: string;
+  }}>({});
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [saving, setSaving] = useState<string | null>(null);
 
   const isSuperAdmin = userRole === 'super_admin';
 
@@ -134,6 +143,41 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
     const url = `${window.location.origin}/c/${campaignSlug}/claim/${token}`;
     navigator.clipboard.writeText(url);
     alert('Claim URL copied to clipboard!');
+  };
+
+  const savePreCreatedInfo = async (claimId: string) => {
+    const editData = editingPreCreated[claimId];
+    if (!editData) return;
+
+    setSaving(claimId);
+    try {
+      const response = await fetch(`/api/admin/claims/${claimId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: editData.first_name,
+          last_name: editData.last_name,
+          email: editData.email || null,
+          company: editData.company || null,
+          title: editData.title || null,
+          phone: editData.phone || null,
+        }),
+      });
+
+      if (response.ok) {
+        delete editingPreCreated[claimId];
+        setEditingPreCreated({...editingPreCreated});
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to save');
+      }
+    } catch (error) {
+      console.error('Failed to save pre-created info:', error);
+      alert('Failed to save');
+    } finally {
+      setSaving(null);
+    }
   };
 
   return (
@@ -363,23 +407,115 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                               )}
 
                               {isPreCreated && claim.claim_token && (
-                                <div>
-                                  <p className="text-xs font-medium text-gray-500 uppercase mb-1">Claim URL</p>
-                                  <div className="flex items-center space-x-2">
-                                    <input
-                                      type="text"
-                                      readOnly
-                                      value={`${window.location.origin}/c/${campaignSlug}/claim/${claim.claim_token}`}
-                                      className="flex-1 px-3 py-1 text-xs border border-gray-300 rounded bg-white"
-                                    />
+                                <>
+                                  <div>
+                                    <p className="text-xs font-medium text-gray-500 uppercase mb-1">Claim URL</p>
+                                    <div className="flex items-center space-x-2">
+                                      <input
+                                        type="text"
+                                        readOnly
+                                        value={`${window.location.origin}/c/${campaignSlug}/claim/${claim.claim_token}`}
+                                        className="flex-1 px-3 py-1 text-xs border border-gray-300 rounded bg-white"
+                                      />
+                                      <button
+                                        onClick={() => copyClaimUrl(claim.claim_token!)}
+                                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                      >
+                                        Copy
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Edit Pre-Created Info */}
+                                  <div className="pt-3 border-t border-gray-200">
+                                    <p className="text-xs font-medium text-gray-500 uppercase mb-2">Edit Pre-filled Info</p>
+                                    {editingPreCreated[claim.id] ? (
+                                      <div className="space-y-3">
+                                        <div className="grid grid-cols-2 gap-3">
+                                          <div>
+                                            <label className="block text-xs text-gray-600 mb-1">First Name</label>
+                                            <input
+                                              type="text"
+                                              value={editingPreCreated[claim.id].first_name}
+                                              onChange={(e) => setEditingPreCreated({
+                                                ...editingPreCreated,
+                                                [claim.id]: {...editingPreCreated[claim.id], first_name: e.target.value}
+                                              })}
+                                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                            />
+                                          </div>
+                                          <div>
+                                            <label className="block text-xs text-gray-600 mb-1">Last Name</label>
+                                            <input
+                                              type="text"
+                                              value={editingPreCreated[claim.id].last_name}
+                                              onChange={(e) => setEditingPreCreated({
+                                                ...editingPreCreated,
+                                                [claim.id]: {...editingPreCreated[claim.id], last_name: e.target.value}
+                                              })}
+                                              className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                            />
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <label className="block text-xs text-gray-600 mb-1">Email</label>
+                                          <input
+                                            type="email"
+                                            value={editingPreCreated[claim.id].email || ''}
+                                            onChange={(e) => setEditingPreCreated({
+                                              ...editingPreCreated,
+                                              [claim.id]: {...editingPreCreated[claim.id], email: e.target.value}
+                                            })}
+                                            className="w-full px-2 py-1 text-sm border border-gray-300 rounded"
+                                          />
+                                        </div>
+                                        <div className="flex space-x-2">
+                                          <button
+                                            onClick={() => savePreCreatedInfo(claim.id)}
+                                            disabled={saving === claim.id}
+                                            className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:opacity-50"
+                                          >
+                                            {saving === claim.id ? 'Saving...' : 'Save'}
+                                          </button>
+                                          <button
+                                            onClick={() => {
+                                              delete editingPreCreated[claim.id];
+                                              setEditingPreCreated({...editingPreCreated});
+                                            }}
+                                            className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded hover:bg-gray-300"
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => setEditingPreCreated({
+                                          ...editingPreCreated,
+                                          [claim.id]: {
+                                            first_name: claim.first_name || '',
+                                            last_name: claim.last_name || '',
+                                            email: claim.email || '',
+                                          }
+                                        })}
+                                        className="text-blue-600 hover:text-blue-800 text-xs"
+                                      >
+                                        Edit Info
+                                      </button>
+                                    )}
+                                  </div>
+
+                                  {/* Delete Pre-Created Claim */}
+                                  <div className="pt-3 border-t border-gray-200">
                                     <button
-                                      onClick={() => copyClaimUrl(claim.claim_token!)}
-                                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                                      onClick={() => deleteClaim(claim.id, `${claim.first_name} ${claim.last_name}`.trim() || 'this pre-created claim')}
+                                      disabled={deleting === claim.id}
+                                      className="px-3 py-1 bg-red-100 text-red-700 text-xs rounded hover:bg-red-200 disabled:opacity-50"
                                     >
-                                      Copy
+                                      {deleting === claim.id ? 'Deleting...' : 'Delete Pre-Created Claim'}
                                     </button>
                                   </div>
-                                </div>
+                                </>
                               )}
 
                               <div>

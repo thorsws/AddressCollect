@@ -24,6 +24,14 @@ export async function PATCH(
     }
     if (data.status !== undefined) updateData.status = data.status;
 
+    // Allow editing pre-created claim info
+    if (data.first_name !== undefined) updateData.first_name = data.first_name;
+    if (data.last_name !== undefined) updateData.last_name = data.last_name;
+    if (data.email !== undefined) updateData.email = data.email;
+    if (data.company !== undefined) updateData.company = data.company;
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.phone !== undefined) updateData.phone = data.phone;
+
     const { data: claim, error } = await supabaseAdmin
       .from('claims')
       .update(updateData)
@@ -44,7 +52,7 @@ export async function PATCH(
   }
 }
 
-// DELETE - Delete claim (super_admin only)
+// DELETE - Delete claim (super_admin for all, any admin for pre-created)
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ claimId: string }> }
@@ -52,17 +60,29 @@ export async function DELETE(
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
-  // Only super_admin can delete claims
-  if (admin.role !== 'super_admin') {
-    return NextResponse.json(
-      { error: 'Only super admins can delete claims' },
-      { status: 403 }
-    );
-  }
-
   const { claimId } = await params;
 
   try {
+    // First fetch the claim to check if it's pre-created
+    const { data: claim, error: fetchError } = await supabaseAdmin
+      .from('claims')
+      .select('id, address1, claim_token')
+      .eq('id', claimId)
+      .single();
+
+    if (fetchError || !claim) {
+      return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
+    }
+
+    // Check permissions: super_admin can delete any, others can only delete pre-created (no address)
+    const isPreCreated = claim.claim_token && !claim.address1;
+    if (admin.role !== 'super_admin' && !isPreCreated) {
+      return NextResponse.json(
+        { error: 'Only super admins can delete submitted claims' },
+        { status: 403 }
+      );
+    }
+
     // First delete any email verifications for this claim
     await supabaseAdmin
       .from('email_verifications')
@@ -80,7 +100,7 @@ export async function DELETE(
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log(`[Claim] Deleted by ${admin.email}: ${claimId}`);
+    console.log(`[Claim] Deleted by ${admin.email}: ${claimId}${isPreCreated ? ' (pre-created)' : ''}`);
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error in claim DELETE:', error);

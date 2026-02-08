@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface PreCreateClaimFormProps {
   campaignId: string;
@@ -8,11 +9,13 @@ interface PreCreateClaimFormProps {
 }
 
 export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCreateClaimFormProps) {
+  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [claimUrl, setClaimUrl] = useState('');
+  const [createdName, setCreatedName] = useState('');
 
   const [formData, setFormData] = useState({
     first_name: '',
@@ -50,6 +53,9 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
         throw new Error(data.error || 'Failed to create claim');
       }
 
+      // Store the name for display
+      const name = [formData.first_name, formData.last_name].filter(Boolean).join(' ') || 'Unnamed';
+      setCreatedName(name);
       setSuccess(true);
       setClaimUrl(data.claimUrl);
       setFormData({
@@ -61,6 +67,9 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
         phone: '',
         admin_notes: '',
       });
+
+      // Refresh the page to update the claims list
+      router.refresh();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -101,14 +110,16 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
       )}
 
       {success && claimUrl && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded">
-          <p className="text-green-800 font-medium mb-2">Claim pre-created successfully!</p>
+        <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded">
+          <p className="text-gray-800 font-medium mb-2">
+            Claim pre-created for <span className="font-bold">{createdName}</span>
+          </p>
           <div className="flex items-center space-x-2">
             <input
               type="text"
               readOnly
               value={claimUrl}
-              className="flex-1 px-3 py-2 border border-green-300 rounded bg-white text-sm"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded bg-white text-sm"
             />
             <button
               onClick={copyUrl}
@@ -117,8 +128,8 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
               Copy URL
             </button>
           </div>
-          <p className="text-xs text-green-700 mt-2">
-            Share this URL with the person. They can fill in their address when ready.
+          <p className="text-xs text-gray-600 mt-2">
+            Share this URL with {createdName}. They can fill in their address when ready.
           </p>
         </div>
       )}
@@ -236,7 +247,7 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
               disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
-              {loading ? 'Creating...' : 'Create & Get URL'}
+              {loading ? 'Creating...' : success ? 'Create Another' : 'Create'}
             </button>
           </div>
         </form>
