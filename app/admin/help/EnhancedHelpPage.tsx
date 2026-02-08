@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 
 export default function EnhancedHelpPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState('');
-  const [showTour, setShowTour] = useState(false);
 
   const sections = [
     { id: 'quick-start', title: 'Quick Start Guide', icon: '🚀' },
@@ -39,53 +38,8 @@ export default function EnhancedHelpPage() {
     section.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Check if first visit
-  useEffect(() => {
-    const hasVisited = localStorage.getItem('help-tour-completed');
-    if (!hasVisited) {
-      setTimeout(() => setShowTour(true), 500);
-    }
-  }, []);
-
-  const completeTour = () => {
-    localStorage.setItem('help-tour-completed', 'true');
-    setShowTour(false);
-  };
-
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Tour Overlay */}
-      {showTour && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-xl p-8 max-w-md">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Welcome to Claim Your Cognitive Kin! 👋</h2>
-            <div className="space-y-3 text-gray-700 mb-6">
-              <p>This help page includes:</p>
-              <ul className="list-disc list-inside space-y-2 ml-4">
-                <li><strong>Searchable content</strong> - Find what you need quickly</li>
-                <li><strong>Quick navigation</strong> - Jump to any section</li>
-                <li><strong>Updated guides</strong> - All the latest features</li>
-              </ul>
-              <p className="mt-4">You can always re-run this tour by clicking &quot;Start Tour&quot; at the top!</p>
-            </div>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowTour(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
-              >
-                Skip
-              </button>
-              <button
-                onClick={completeTour}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Got it!
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Sidebar Navigation */}
       <aside className="w-64 bg-white border-r border-gray-200 overflow-y-auto">
         <div className="p-4 border-b border-gray-200">
@@ -112,14 +66,6 @@ export default function EnhancedHelpPage() {
             </button>
           ))}
         </nav>
-        <div className="p-4 border-t border-gray-200">
-          <button
-            onClick={() => setShowTour(true)}
-            className="w-full px-3 py-2 bg-purple-600 text-white text-sm rounded hover:bg-purple-700"
-          >
-            🎯 Start Tour
-          </button>
-        </div>
       </aside>
 
       {/* Main Content */}
@@ -138,14 +84,14 @@ export default function EnhancedHelpPage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">🚀 Quick Start Guide</h2>
               <div className="space-y-4 text-gray-700">
                 <p>
-                  Claim Your Cognitive Kin helps you collect shipping addresses through customizable campaign pages.
-                  Perfect for book giveaways, raffles, and promotional campaigns.
+                  AddressCollect helps you collect shipping addresses through customizable campaign pages.
+                  Perfect for giveaways, raffles, promotional campaigns, and any situation where you need to collect physical addresses at scale.
                 </p>
                 <ol className="list-decimal list-inside space-y-2 ml-4">
                   <li><strong>Create a campaign</strong> - Set up your collection page with custom messaging</li>
                   <li><strong>Preview & share</strong> - Use the preview button to see it, then share your campaign URL</li>
                   <li><strong>Collect addresses</strong> - Recipients fill out the form</li>
-                  <li><strong>Export data</strong> - Download addresses as CSV for shipping</li>
+                  <li><strong>Export data</strong> - Download addresses as CSV for shipping or mailing</li>
                 </ol>
               </div>
             </section>
@@ -202,17 +148,18 @@ export default function EnhancedHelpPage() {
                 <h3 className="text-lg font-semibold text-gray-800 mt-4">Claim Statuses</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4">
                   <li><strong className="text-yellow-600">Pending</strong> - Awaiting email verification</li>
-                  <li><strong className="text-green-600">Confirmed</strong> - Ready to send</li>
-                  <li><strong className="text-red-600">Rejected</strong> - Marked as invalid</li>
-                  <li><strong className="text-blue-600">Sent</strong> - Item has been sent (with date)</li>
+                  <li><strong className="text-green-600">Confirmed</strong> - Verified and ready to process</li>
+                  <li><strong className="text-red-600">Rejected</strong> - Marked as invalid or declined</li>
+                  <li><strong className="text-blue-600">Sent</strong> - Item has been shipped or fulfilled (with timestamp)</li>
                 </ul>
 
                 <h3 className="text-lg font-semibold text-gray-800 mt-4">Actions</h3>
                 <ul className="list-disc list-inside space-y-1 ml-4">
-                  <li><strong>Mark as Sent</strong> - Track which items have been sent with date</li>
-                  <li><strong>Reject</strong> - Mark invalid claims</li>
-                  <li><strong>Add Notes</strong> - Internal notes for your reference</li>
-                  <li><strong>Copy Address</strong> - Quick copy for shipping labels</li>
+                  <li><strong>Mark as Sent</strong> - Record when items have been shipped/fulfilled</li>
+                  <li><strong>Change Status</strong> - Update claim status as needed</li>
+                  <li><strong>Add Notes</strong> - Internal notes for tracking and reference</li>
+                  <li><strong>Copy Address</strong> - Quick copy for shipping labels or mailing</li>
+                  <li><strong>Delete (Super Admin)</strong> - Permanently remove claims if needed</li>
                 </ul>
               </div>
             </section>
@@ -334,13 +281,16 @@ export default function EnhancedHelpPage() {
             <section id="tips" className="bg-blue-50 rounded-lg shadow-md p-6 border border-blue-200 transition-all">
               <h2 className="text-2xl font-bold text-blue-900 mb-4">💡 Pro Tips</h2>
               <div className="space-y-3 text-blue-800">
-                <p><strong>Use Test Mode</strong> - Enable while setting up to avoid counting test submissions</p>
-                <p><strong>Kiosk Mode for Events</strong> - Perfect for collecting addresses on a shared iPad/tablet</p>
-                <p><strong>Email Verification</strong> - Enable for public campaigns to ensure valid emails</p>
-                <p><strong>Preview Before Sharing</strong> - Always preview your campaign before sending out links</p>
-                <p><strong>QR Codes for Events</strong> - Print QR codes for easy sign-ups at conferences or events</p>
-                <p><strong>Filter Before Export</strong> - Use filters to export only what you need</p>
-                <p><strong>Import Historical Data</strong> - Upload past shipments to keep everything in one place</p>
+                <p><strong>Use Test Mode</strong> - Enable while setting up to avoid counting test submissions in your campaign</p>
+                <p><strong>Kiosk Mode for Events</strong> - Perfect for collecting addresses on a shared device (iPad, tablet, or laptop at events)</p>
+                <p><strong>Email Verification</strong> - Enable for public campaigns to ensure valid email addresses and reduce spam</p>
+                <p><strong>Preview Before Sharing</strong> - Always preview your campaign to check formatting and messaging before sharing</p>
+                <p><strong>QR Codes for Events</strong> - Print QR codes for easy sign-ups at conferences, events, or physical locations</p>
+                <p><strong>Filter Before Export</strong> - Apply filters to export only what you need (e.g., confirmed & not sent)</p>
+                <p><strong>Import Historical Data</strong> - Upload past campaigns or shipments to keep all your data centralized</p>
+                <p><strong>Custom Questions</strong> - Add campaign-specific questions to collect additional data beyond addresses</p>
+                <p><strong>Pre-Created Claims</strong> - Create personalized invite links for VIP recipients or targeted campaigns</p>
+                <p><strong>Multiple Campaigns</strong> - Track different initiatives separately with unique URLs and settings</p>
               </div>
             </section>
 
