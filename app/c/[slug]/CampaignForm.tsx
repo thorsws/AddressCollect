@@ -173,7 +173,7 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="firstName" className="block text-base font-semibold text-gray-700 mb-2">
             First Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -183,12 +183,12 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             required
             value={formData.firstName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="lastName" className="block text-base font-semibold text-gray-700 mb-2">
             Last Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -198,14 +198,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             required
             value={formData.lastName}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       </div>
 
       {campaign.require_email && (
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="email" className="block text-base font-semibold text-gray-700 mb-2">
             Email {campaign.require_email && <span className="text-red-500">*</span>}
           </label>
           <input
@@ -215,14 +215,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             required={campaign.require_email}
             value={formData.email}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
 
       {campaign.collect_company && (
         <div>
-          <label htmlFor="company" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="company" className="block text-base font-semibold text-gray-700 mb-2">
             Company / Organization
           </label>
           <input
@@ -231,14 +231,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             name="company"
             value={formData.company}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
 
       {campaign.collect_title && (
         <div>
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="title" className="block text-base font-semibold text-gray-700 mb-2">
             Role / Title
           </label>
           <input
@@ -247,14 +247,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             name="title"
             value={formData.title}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
 
       {campaign.collect_phone && (
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="phone" className="block text-base font-semibold text-gray-700 mb-2">
             Phone Number
           </label>
           <input
@@ -263,17 +263,17 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             name="phone"
             value={formData.phone}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
       )}
 
       <div className="border-t pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h3>
+        <h3 className="text-xl font-bold text-gray-900 mb-6">Shipping Address</h3>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="address1" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="address1" className="block text-base font-semibold text-gray-700 mb-2">
               Street Address <span className="text-red-500">*</span>
             </label>
             <input
@@ -283,12 +283,12 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
               required
               value={formData.address1}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div>
-            <label htmlFor="address2" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="address2" className="block text-base font-semibold text-gray-700 mb-2">
               Apartment, Suite, etc. (optional)
             </label>
             <input
@@ -297,13 +297,13 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
               name="address2"
               value={formData.address2}
               onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="city" className="block text-base font-semibold text-gray-700 mb-2">
                 City <span className="text-red-500">*</span>
               </label>
               <input
@@ -313,12 +313,12 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                 required
                 value={formData.city}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label htmlFor="region" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="region" className="block text-base font-semibold text-gray-700 mb-2">
                 State / Province <span className="text-red-500">*</span>
               </label>
               <input
@@ -328,14 +328,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                 required
                 value={formData.region}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="postalCode" className="block text-base font-semibold text-gray-700 mb-2">
                 Postal Code <span className="text-red-500">*</span>
               </label>
               <input
@@ -345,18 +345,18 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                 required
                 value={formData.postalCode}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
 
             <div>
-              <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="country" className="block text-base font-semibold text-gray-700 mb-2">
                 Country
               </label>
-              <div className="w-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-700">
+              <div className="w-full px-4 py-3 text-base border border-gray-200 rounded-md bg-gray-50 text-gray-700 font-medium">
                 United States
               </div>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-sm text-gray-600 mt-2">
                 We currently only ship within the USA.
               </p>
             </div>
@@ -366,7 +366,7 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
 
       {campaign.require_invite_code && (
         <div>
-          <label htmlFor="inviteCode" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="inviteCode" className="block text-base font-semibold text-gray-700 mb-2">
             Invite Code <span className="text-red-500">*</span>
           </label>
           <input
@@ -384,14 +384,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
       {/* Custom Questions */}
       {questions.length > 0 && (
         <div className="border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Help Us Learn More</h3>
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Help Us Learn More</h3>
           {campaign.questions_intro_text && (
-            <p className="text-gray-600 text-sm mb-4">{campaign.questions_intro_text}</p>
+            <p className="text-gray-700 text-base mb-6">{campaign.questions_intro_text}</p>
           )}
           <div className="space-y-4">
             {questions.map((q) => (
               <div key={q.id}>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-base font-semibold text-gray-700 mb-2">
                   {q.question_text} {q.is_required && <span className="text-red-500">*</span>}
                 </label>
                 {q.question_type === 'text' ? (
@@ -399,10 +399,10 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                     type="text"
                     value={(answers[q.id] as string) || ''}
                     onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 ) : q.question_type === 'multiple_choice' ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {q.options?.map((option) => (
                       <label key={option} className="flex items-center">
                         <input
@@ -411,14 +411,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                           value={option}
                           checked={answers[q.id] === option}
                           onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-                          className="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                          className="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 flex-shrink-0"
                         />
-                        <span className="ml-2 text-gray-700">{option}</span>
+                        <span className="ml-3 text-base text-gray-700">{option}</span>
                       </label>
                     ))}
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {q.options?.map((option) => {
                       const selectedOptions = (answers[q.id] as string[]) || [];
                       return (
@@ -434,9 +434,9 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
                                 : current.filter(o => o !== option);
                               setAnswers({ ...answers, [q.id]: updated });
                             }}
-                            className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
                           />
-                          <span className="ml-2 text-gray-700">{option}</span>
+                          <span className="ml-3 text-base text-gray-700">{option}</span>
                         </label>
                       );
                     })}
@@ -455,10 +455,10 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
             type="checkbox"
             checked={consent}
             onChange={(e) => setConsent(e.target.checked)}
-            className="mt-1 h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            className="mt-1 h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
             required
           />
-          <span className="ml-3 text-sm text-gray-700">
+          <span className="ml-3 text-base text-gray-700 leading-relaxed">
             I consent to providing my information for <strong>{campaign.title}</strong>. I understand my data will be used solely for this purpose,
             stored securely, and deleted within 60 days. I can request deletion at any time by contacting{' '}
             {campaign.contact_email || 'the organizer'}.
@@ -469,14 +469,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-md p-4">
-          <p className="text-red-800 text-sm">{error}</p>
+          <p className="text-red-800 text-base font-medium">{error}</p>
         </div>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 text-white py-3 px-4 rounded-md font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="w-full bg-blue-600 text-white py-4 px-6 rounded-md text-lg font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {loading ? 'Submitting...' : 'Claim Your Book'}
       </button>

@@ -203,25 +203,25 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md p-8">
+    <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 md:p-10">
           {campaign.show_logo && (
             <div className="mb-6 flex justify-center">
-              <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-10 w-auto" />
+              <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-12 w-auto" />
             </div>
           )}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{campaign.title}</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">{campaign.title}</h1>
             {campaign.description && (
-              <div className="text-gray-600 mb-6 prose prose-sm max-w-none">
+              <div className="text-gray-700 mb-6 prose prose-base sm:prose-lg max-w-none">
                 <ReactMarkdown>{campaign.description}</ReactMarkdown>
               </div>
             )}
 
             {campaign.ends_at && (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-                <p className="text-amber-900 font-medium">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6">
+                <p className="text-amber-900 font-semibold text-base">
                   Deadline: {new Date(campaign.ends_at).toLocaleDateString('en-US', {
                     weekday: 'long',
                     year: 'numeric',
@@ -237,8 +237,8 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             )}
 
             {campaign.show_scarcity && campaign.capacity_total > 0 && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-blue-900 font-medium">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
+                <p className="text-blue-900 font-semibold text-base">
                   {campaign.capacity_total - claimCount} of {campaign.capacity_total} spots remaining
                 </p>
               </div>
@@ -248,20 +248,20 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               <BannerPreview url={campaign.banner_url} />
             )}
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h3 className="text-green-900 font-semibold mb-2">Privacy Promise</h3>
-              <p className="text-green-800 text-sm">
+            <div className="bg-green-50 border border-green-200 rounded-lg p-5">
+              <h3 className="text-green-900 font-bold text-lg mb-2">Privacy Promise</h3>
+              <p className="text-green-800 text-base font-medium">
                 {campaign.privacy_blurb ||
                   "We only use your address to ship the book. We won't sell your information."}
               </p>
             </div>
 
             {campaign.contact_email && (
-              <p className="text-gray-600 text-sm mt-4">
+              <p className="text-gray-700 text-base mt-4">
                 {campaign.contact_text || 'If you have any questions, please email'}{' '}
                 <a
                   href={`mailto:${campaign.contact_email}`}
-                  className="text-blue-600 hover:text-blue-700 underline"
+                  className="text-blue-600 hover:text-blue-700 underline font-medium"
                 >
                   {campaign.contact_email}
                 </a>
