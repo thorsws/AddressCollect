@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import LogoToggle from '../LogoToggle';
 import { utcToEastern, easternToUtc } from '@/lib/utils/timezone';
 
 const QuestionsManager = dynamic(() => import('../QuestionsManager'), { ssr: false });
@@ -82,6 +81,7 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
     max_claims_per_address: campaign.max_claims_per_address || 1,
     test_mode: campaign.test_mode,
     show_banner: campaign.show_banner,
+    show_logo: campaign.show_logo,
     banner_url: campaign.banner_url || '',
     contact_email: campaign.contact_email || '',
     contact_text: campaign.contact_text || 'If you have any questions, please email',
@@ -133,15 +133,12 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
               <h1 className="text-xl font-bold text-gray-900">Edit Campaign</h1>
               <p className="text-sm text-gray-500">{campaign.slug}</p>
             </div>
-            <div className="flex items-center space-x-4">
-              <LogoToggle campaignId={campaign.id} initialValue={campaign.show_logo} />
-              <a
-                href={`/admin/campaigns/${campaign.id}`}
-                className="text-sm text-blue-600 hover:text-blue-700"
-              >
-                ← Back to Campaign
-              </a>
-            </div>
+            <a
+              href={`/admin/campaigns/${campaign.id}`}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
+              ← Back to Campaign
+            </a>
           </div>
         </div>
       </nav>
@@ -350,6 +347,16 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Show scarcity (remaining capacity)</span>
+              </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.show_logo}
+                  onChange={(e) => setFormData({ ...formData, show_logo: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show logo on campaign page</span>
               </label>
 
               <label className="flex items-center">
