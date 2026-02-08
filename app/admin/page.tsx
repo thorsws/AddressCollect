@@ -56,27 +56,27 @@ export default async function AdminDashboard() {
               <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-8 w-auto" />
             </div>
             <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-700 font-semibold">
                 {admin.name} ({admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Viewer'})
               </span>
               {canManageUsers(admin.role) && (
                 <Link
                   href="/admin/users"
-                  className="text-sm text-purple-600 hover:text-purple-700 font-medium"
+                  className="text-sm text-purple-600 hover:text-purple-700 font-semibold"
                 >
                   Manage Users
                 </Link>
               )}
               <Link
                 href="/admin/help"
-                className="text-sm text-gray-600 hover:text-gray-700"
+                className="text-sm text-gray-700 hover:text-gray-900 font-medium"
               >
                 Help
               </Link>
               <form action="/api/admin/auth/logout" method="POST">
                 <button
                   type="submit"
-                  className="text-sm text-blue-600 hover:text-blue-700"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Logout
                 </button>
@@ -89,8 +89,8 @@ export default async function AdminDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8 flex justify-between items-start">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Campaigns</h2>
-            <p className="text-gray-600">Manage your giveaway campaigns and view claims.</p>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Campaigns</h2>
+            <p className="text-base text-gray-700 font-medium">Manage your giveaway campaigns and view claims.</p>
           </div>
           <div className="flex space-x-3">
             <Link

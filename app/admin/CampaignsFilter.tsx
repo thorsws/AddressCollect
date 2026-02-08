@@ -66,7 +66,7 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
                 </option>
               ))}
             </select>
-            <span className="ml-auto text-sm text-gray-500">
+            <span className="ml-auto text-sm text-gray-700 font-medium">
               Showing {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -125,8 +125,8 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-500">/c/{campaign.slug}</p>
-              <p className="text-xs text-gray-400 mt-1.5">
+              <p className="text-sm text-gray-700 font-medium">/c/{campaign.slug}</p>
+              <p className="text-sm text-gray-600 font-medium mt-1.5">
                 Created by {campaign.creatorEmail
                   ? (campaign.creatorEmail === currentUserEmail ? 'you' : campaign.creatorName)
                   : 'Unknown'}
@@ -134,8 +134,8 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
             </div>
 
             <div className="mb-4">
-              <p className="text-sm text-gray-600">
-                Confirmed: <span className="font-semibold text-gray-900">{capacityText}</span>
+              <p className="text-base text-gray-700 font-semibold">
+                Confirmed: <span className="font-bold text-gray-900">{capacityText}</span>
               </p>
             </div>
 
