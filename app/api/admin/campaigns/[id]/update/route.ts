@@ -46,7 +46,7 @@ export async function PUT(
       .update({
         title: data.title,
         internal_title: data.internal_title,
-        description: data.description || null,
+        description: data.description !== undefined ? data.description : null,
         capacity_total: data.capacity_total ? parseInt(data.capacity_total) : 0,
         is_active: data.is_active !== false,
         require_email: data.require_email !== false,
@@ -67,6 +67,7 @@ export async function PUT(
         contact_text: data.contact_text || null,
         kiosk_mode: data.kiosk_mode === true,
         enable_questions: data.enable_questions === true,
+        questions_intro_text: data.questions_intro_text || null,
         starts_at: data.starts_at || null,
         ends_at: data.ends_at || null,
         notes: data.notes || null,
