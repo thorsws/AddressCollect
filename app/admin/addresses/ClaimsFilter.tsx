@@ -40,6 +40,7 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
   const [dateFilter, setDateFilter] = useState<string>(''); // Filter by sent date
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [bulkSentDate, setBulkSentDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default to today
 
   // Apply filters
   const filteredClaims = claims.filter(claim => {
@@ -89,60 +90,32 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
     setSelectedIds(new Set());
   };
 
-  // Bulk update - mark selected as sent
+  // Bulk update - mark selected as sent with chosen date
   const bulkMarkAsSent = async () => {
     if (selectedIds.size === 0) return;
-    if (!confirm(`Mark ${selectedIds.size} claim(s) as sent?`)) return;
-
-    setBulkUpdating(true);
-    try {
-      const response = await fetch('/api/admin/claims/bulk-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          claimIds: Array.from(selectedIds),
-          shipped_at: new Date().toISOString(),
-        }),
-      });
-
-      if (response.ok) {
-        // Update local state
-        const now = new Date().toISOString();
-        setClaims(claims.map(c =>
-          selectedIds.has(c.id) ? { ...c, shipped_at: now } : c
-        ));
-        setSelectedIds(new Set());
-      } else {
-        const data = await response.json();
-        alert(data.error || 'Failed to update claims');
-      }
-    } catch (error) {
-      console.error('Bulk update error:', error);
-      alert('Failed to update claims');
-    } finally {
-      setBulkUpdating(false);
+    if (!bulkSentDate) {
+      alert('Please select a date');
+      return;
     }
-  };
-
-  // Bulk update - clear sent date
-  const bulkClearSent = async () => {
-    if (selectedIds.size === 0) return;
-    if (!confirm(`Clear sent date for ${selectedIds.size} claim(s)?`)) return;
+    if (!confirm(`Mark ${selectedIds.size} claim(s) as sent on ${new Date(bulkSentDate + 'T12:00:00').toLocaleDateString()}?`)) return;
 
     setBulkUpdating(true);
     try {
+      // Use noon on the selected date to avoid timezone issues
+      const sentDateTime = new Date(bulkSentDate + 'T12:00:00').toISOString();
+
       const response = await fetch('/api/admin/claims/bulk-update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           claimIds: Array.from(selectedIds),
-          shipped_at: null,
+          shipped_at: sentDateTime,
         }),
       });
 
       if (response.ok) {
         setClaims(claims.map(c =>
-          selectedIds.has(c.id) ? { ...c, shipped_at: null } : c
+          selectedIds.has(c.id) ? { ...c, shipped_at: sentDateTime } : c
         ));
         setSelectedIds(new Set());
       } else {
@@ -296,19 +269,21 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
           <span className="text-sm font-medium text-blue-800">
             {selectedIds.size} selected
           </span>
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-700">Sent date:</label>
+            <input
+              type="date"
+              value={bulkSentDate}
+              onChange={(e) => setBulkSentDate(e.target.value)}
+              className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
           <button
             onClick={bulkMarkAsSent}
-            disabled={bulkUpdating}
+            disabled={bulkUpdating || !bulkSentDate}
             className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
           >
-            {bulkUpdating ? 'Updating...' : 'Mark as Sent'}
-          </button>
-          <button
-            onClick={bulkClearSent}
-            disabled={bulkUpdating}
-            className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 disabled:opacity-50"
-          >
-            Clear Sent Date
+            {bulkUpdating ? 'Updating...' : 'Set Sent Date'}
           </button>
           <button
             onClick={clearSelection}
