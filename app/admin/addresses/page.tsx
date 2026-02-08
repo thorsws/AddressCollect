@@ -98,7 +98,7 @@ export default async function AllAddressesPage() {
             <h2 className="text-lg font-semibold text-gray-900">All Claims Across Campaigns</h2>
           </div>
 
-          <ClaimsFilter claims={claims || []} />
+          <ClaimsFilter claims={claims || []} userRole={admin.role} />
         </div>
       </main>
     </div>

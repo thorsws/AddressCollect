@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Claim {
   id: string;
@@ -29,18 +31,31 @@ interface Claim {
 
 interface Props {
   claims: Claim[];
+  userRole: 'super_admin' | 'admin' | 'viewer';
 }
 
-export default function ClaimsFilter({ claims: initialClaims }: Props) {
+export default function ClaimsFilter({ claims: initialClaims, userRole }: Props) {
+  const router = useRouter();
   const [claims, setClaims] = useState(initialClaims);
   const [showTest, setShowTest] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [shippedFilter, setShippedFilter] = useState<string>('all');
   const [preCreatedFilter, setPreCreatedFilter] = useState<string>('all');
-  const [dateFilter, setDateFilter] = useState<string>(''); // Filter by sent date
+  const [dateFilter, setDateFilter] = useState<string>('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
-  const [bulkSentDate, setBulkSentDate] = useState<string>(new Date().toISOString().split('T')[0]); // Default to today
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [bulkSentDate, setBulkSentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  // Confirm dialog state
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    confirmText?: string;
+    confirmButtonClass?: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', message: '', onConfirm: () => {} });
 
   // Apply filters
   const filteredClaims = claims.filter(claim => {
@@ -55,7 +70,6 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
     if (preCreatedFilter === 'pre-created' && !isPreCreated) return false;
     if (preCreatedFilter === 'regular' && isPreCreated) return false;
 
-    // Date filter - filter by sent date
     if (dateFilter) {
       if (!claim.shipped_at) return false;
       const sentDate = new Date(claim.shipped_at).toISOString().split('T')[0];
@@ -67,7 +81,6 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
 
   const testCount = claims.filter(c => c.is_test_claim).length;
 
-  // Selection handlers
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedIds);
     if (newSelected.has(id)) {
@@ -90,18 +103,10 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
     setSelectedIds(new Set());
   };
 
-  // Bulk update - mark selected as sent with chosen date
-  const bulkMarkAsSent = async () => {
-    if (selectedIds.size === 0) return;
-    if (!bulkSentDate) {
-      alert('Please select a date');
-      return;
-    }
-    if (!confirm(`Mark ${selectedIds.size} claim(s) as sent on ${new Date(bulkSentDate + 'T12:00:00').toLocaleDateString()}?`)) return;
-
+  // Actual bulk update function
+  const performBulkUpdate = async () => {
     setBulkUpdating(true);
     try {
-      // Use noon on the selected date to avoid timezone issues
       const sentDateTime = new Date(bulkSentDate + 'T12:00:00').toISOString();
 
       const response = await fetch('/api/admin/claims/bulk-update', {
@@ -128,6 +133,80 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
     } finally {
       setBulkUpdating(false);
     }
+  };
+
+  // Show confirmation dialog before bulk update
+  const bulkMarkAsSent = () => {
+    if (selectedIds.size === 0) return;
+    if (!bulkSentDate) {
+      alert('Please select a date');
+      return;
+    }
+
+    const formattedDate = new Date(bulkSentDate + 'T12:00:00').toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Set Sent Date',
+      message: `Mark ${selectedIds.size} claim${selectedIds.size > 1 ? 's' : ''} as sent on ${formattedDate}?`,
+      confirmText: 'Set Sent Date',
+      confirmButtonClass: 'bg-blue-600 hover:bg-blue-700',
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        performBulkUpdate();
+      },
+    });
+  };
+
+  // Actual bulk delete function
+  const performBulkDelete = async () => {
+    setBulkDeleting(true);
+    try {
+      const response = await fetch('/api/admin/claims/bulk-delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          claimIds: Array.from(selectedIds),
+        }),
+      });
+
+      if (response.ok) {
+        setClaims(claims.filter(c => !selectedIds.has(c.id)));
+        setSelectedIds(new Set());
+        // Refresh to update the stats at the top of the page
+        router.refresh();
+      } else {
+        const data = await response.json();
+        alert(data.error || 'Failed to delete claims');
+      }
+    } catch (error) {
+      console.error('Bulk delete error:', error);
+      alert('Failed to delete claims');
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
+  // Show confirmation dialog before bulk delete
+  const bulkDelete = () => {
+    if (selectedIds.size === 0) return;
+
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Claims',
+      message: `Are you sure you want to permanently delete ${selectedIds.size} claim${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`,
+      confirmText: 'Delete',
+      confirmButtonClass: 'bg-red-600 hover:bg-red-700',
+      onConfirm: () => {
+        setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+        performBulkDelete();
+      },
+    });
   };
 
   const exportFilteredClaims = () => {
@@ -170,7 +249,6 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
     link.click();
   };
 
-  // Get unique sent dates for quick filter
   const sentDates = Array.from(new Set(
     claims
       .filter(c => c.shipped_at)
@@ -179,6 +257,16 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
 
   return (
     <>
+      <ConfirmDialog
+        isOpen={confirmDialog.isOpen}
+        title={confirmDialog.title}
+        message={confirmDialog.message}
+        confirmText={confirmDialog.confirmText}
+        confirmButtonClass={confirmDialog.confirmButtonClass}
+        onConfirm={confirmDialog.onConfirm}
+        onCancel={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+      />
+
       {/* Filters */}
       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex flex-wrap gap-4 items-center">
         <div className="flex items-center gap-2">
@@ -291,6 +379,15 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
           >
             Clear Selection
           </button>
+          {userRole === 'super_admin' && (
+            <button
+              onClick={bulkDelete}
+              disabled={bulkDeleting}
+              className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 disabled:opacity-50 ml-2"
+            >
+              {bulkDeleting ? 'Deleting...' : 'Delete Selected'}
+            </button>
+          )}
         </div>
       )}
 
@@ -356,7 +453,7 @@ export default function ClaimsFilter({ claims: initialClaims }: Props) {
                   <td className="px-4 py-4 whitespace-nowrap">
                     {!isPreCreated && claim.shipped_at ? (
                       <span className="px-3 py-1 text-xs font-medium rounded bg-blue-100 text-blue-800">
-                        ✓ Sent
+                        Sent
                       </span>
                     ) : !isPreCreated ? (
                       <span className="text-gray-400 text-xs">-</span>
