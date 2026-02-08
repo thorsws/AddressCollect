@@ -51,10 +51,12 @@ export default function TokenClaimForm({
   campaign,
   prefilledData,
   claimToken,
+  onSuccess,
 }: {
   campaign: Campaign;
   prefilledData: PrefilledData;
   claimToken: string;
+  onSuccess?: (requiresVerification: boolean) => void;
 }) {
   const [formData, setFormData] = useState<FormData>({
     firstName: prefilledData.first_name || '',
@@ -74,7 +76,7 @@ export default function TokenClaimForm({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
+  const [internalSuccess, setInternalSuccess] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
   const [consent, setConsent] = useState(false);
 
@@ -105,9 +107,13 @@ export default function TokenClaimForm({
         return;
       }
 
-      setSuccess(true);
-      if (data.requiresVerification) {
-        setRequiresVerification(true);
+      if (onSuccess) {
+        onSuccess(data.requiresVerification || false);
+      } else {
+        setInternalSuccess(true);
+        if (data.requiresVerification) {
+          setRequiresVerification(true);
+        }
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -116,7 +122,7 @@ export default function TokenClaimForm({
     }
   };
 
-  if (success) {
+  if (internalSuccess) {
     return (
       <div className="text-center py-8">
         <div className="mb-4">

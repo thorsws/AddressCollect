@@ -1,8 +1,6 @@
 import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import ReactMarkdown from 'react-markdown';
-import TokenClaimForm from './TokenClaimForm';
-import BannerPreview from '../../BannerPreview';
+import TokenClaimFormWrapper from './TokenClaimFormWrapper';
 
 interface PreClaimPageProps {
   params: Promise<{ slug: string; token: string }>;
@@ -40,6 +38,11 @@ export default async function PreClaimPage({ params }: PreClaimPageProps) {
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md mx-auto">
           <div className="bg-white rounded-lg shadow-lg p-8 text-center">
+            {campaign.show_logo && (
+              <div className="mb-6 flex justify-center">
+                <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-12 w-auto" />
+              </div>
+            )}
             <div className="mb-4">
               <svg className="mx-auto h-16 w-16 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -55,61 +58,27 @@ export default async function PreClaimPage({ params }: PreClaimPageProps) {
     );
   }
 
+  // Prepare page content data for the wrapper
+  const pageContent = {
+    showLogo: campaign.show_logo,
+    title: campaign.title,
+    description: campaign.description,
+    showBanner: campaign.show_banner && campaign.banner_url,
+    bannerUrl: campaign.banner_url,
+    privacyBlurb: campaign.privacy_blurb,
+    contactEmail: campaign.contact_email,
+    contactText: campaign.contact_text,
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 sm:py-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 md:p-10">
-          {campaign.show_logo && (
-            <div className="mb-6 flex justify-center">
-              <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-12 w-auto" />
-            </div>
-          )}
-
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">{campaign.title}</h1>
-          {campaign.description && (
-            <div className="text-gray-700 mb-6 prose prose-base sm:prose-lg max-w-none">
-              <ReactMarkdown>{campaign.description}</ReactMarkdown>
-            </div>
-          )}
-
-          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-blue-800 text-base">
-              <strong>Note:</strong> This form has been pre-filled for you. Please review and update any information as needed before submitting.
-            </p>
-          </div>
-
-          {campaign.show_banner && campaign.banner_url && (
-            <div className="mb-6">
-              <BannerPreview url={campaign.banner_url} />
-            </div>
-          )}
-
-          <div className="bg-green-50 border border-green-200 rounded-lg p-5 mb-6">
-            <h3 className="text-green-900 font-bold text-lg mb-2">Privacy Promise</h3>
-            <p className="text-green-800 text-base font-medium">
-              {campaign.privacy_blurb ||
-                "We only use your address to ship the book. We won't sell your information."}
-            </p>
-          </div>
-
-          {campaign.contact_email && (
-            <p className="text-gray-700 text-base mb-6">
-              {campaign.contact_text || 'If you have any questions, please email'}{' '}
-              <a
-                href={`mailto:${campaign.contact_email}`}
-                className="text-blue-600 hover:text-blue-700 underline font-medium"
-              >
-                {campaign.contact_email}
-              </a>
-            </p>
-          )}
-
-          <TokenClaimForm
-            campaign={campaign}
-            prefilledData={claim}
-            claimToken={token}
-          />
-        </div>
+        <TokenClaimFormWrapper
+          campaign={campaign}
+          prefilledData={claim}
+          claimToken={token}
+          pageContent={pageContent}
+        />
       </div>
     </div>
   );
