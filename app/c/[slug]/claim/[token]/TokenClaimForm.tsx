@@ -94,7 +94,7 @@ export default function TokenClaimForm({
       const response = await fetch(`/api/campaigns/${campaign.slug}/claim`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, claimToken }),
+        body: JSON.stringify({ ...formData, claimToken, consent }),
       });
 
       const data = await response.json();
