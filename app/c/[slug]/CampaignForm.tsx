@@ -63,9 +63,10 @@ const initialFormData: FormData = {
 interface Props {
   campaign: Campaign;
   questions?: Question[];
+  notYetStarted?: boolean;
 }
 
-export default function CampaignForm({ campaign, questions = [] }: Props) {
+export default function CampaignForm({ campaign, questions = [], notYetStarted = false }: Props) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [consent, setConsent] = useState(false);
@@ -93,6 +94,13 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
     e.preventDefault();
     setLoading(true);
     setError('');
+
+    // Check if campaign hasn't started yet
+    if (notYetStarted) {
+      setError('This campaign has not started yet. Please check back later.');
+      setLoading(false);
+      return;
+    }
 
     // Validate consent
     if (!consent) {
@@ -475,10 +483,14 @@ export default function CampaignForm({ campaign, questions = [] }: Props) {
 
       <button
         type="submit"
-        disabled={loading}
-        className="w-full bg-blue-600 text-white py-4 px-6 rounded-md text-lg font-bold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        disabled={loading || notYetStarted}
+        className={`w-full py-4 px-6 rounded-md text-lg font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed transition-colors ${
+          notYetStarted
+            ? 'bg-gray-400 text-white cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:opacity-50'
+        }`}
       >
-        {loading ? 'Submitting...' : 'Claim Your Book'}
+        {loading ? 'Submitting...' : notYetStarted ? 'Submissions Not Yet Open' : 'Claim Your Book'}
       </button>
     </form>
   );
