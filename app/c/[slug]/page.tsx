@@ -178,7 +178,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               </div>
             )}
 
-            {campaign.ends_at && !submissionsDisabled && (
+            {campaign.ends_at && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6">
                 <p className="text-amber-900 font-semibold text-base">
                   Deadline: {new Date(campaign.ends_at).toLocaleDateString('en-US', {
