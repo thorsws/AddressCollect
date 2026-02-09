@@ -69,6 +69,7 @@ interface Props {
 export default function CampaignForm({ campaign, questions = [], notYetStarted = false }: Props) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
+  const [otherText, setOtherText] = useState<Record<string, string>>({});
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -78,6 +79,7 @@ export default function CampaignForm({ campaign, questions = [], notYetStarted =
   const resetForm = () => {
     setFormData(initialFormData);
     setAnswers({});
+    setOtherText({});
     setSuccess(false);
     setRequiresVerification(false);
     setError('');
@@ -412,40 +414,88 @@ export default function CampaignForm({ campaign, questions = [], notYetStarted =
                 ) : q.question_type === 'multiple_choice' ? (
                   <div className="space-y-3">
                     {q.options?.map((option) => (
-                      <label key={option} className="flex items-center">
-                        <input
-                          type="radio"
-                          name={`question-${q.id}`}
-                          value={option}
-                          checked={answers[q.id] === option}
-                          onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-                          className="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 flex-shrink-0"
-                        />
-                        <span className="ml-3 text-base text-gray-700">{option}</span>
-                      </label>
+                      <div key={option}>
+                        <label className="flex items-center">
+                          <input
+                            type="radio"
+                            name={`question-${q.id}`}
+                            value={option}
+                            checked={answers[q.id] === option || (option === 'Other' && (answers[q.id] as string)?.startsWith('Other: '))}
+                            onChange={(e) => {
+                              if (option === 'Other') {
+                                setAnswers({ ...answers, [q.id]: `Other: ${otherText[q.id] || ''}` });
+                              } else {
+                                setAnswers({ ...answers, [q.id]: e.target.value });
+                              }
+                            }}
+                            className="h-5 w-5 text-blue-600 border-gray-300 focus:ring-blue-500 flex-shrink-0"
+                          />
+                          <span className="ml-3 text-base text-gray-700">{option}</span>
+                        </label>
+                        {option === 'Other' && (answers[q.id] === 'Other' || (answers[q.id] as string)?.startsWith('Other: ')) && (
+                          <input
+                            type="text"
+                            placeholder="Please specify..."
+                            value={otherText[q.id] || ''}
+                            onChange={(e) => {
+                              setOtherText({ ...otherText, [q.id]: e.target.value });
+                              setAnswers({ ...answers, [q.id]: `Other: ${e.target.value}` });
+                            }}
+                            className="mt-2 ml-8 w-full max-w-md px-3 py-2 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        )}
+                      </div>
                     ))}
                   </div>
                 ) : (
                   <div className="space-y-3">
                     {q.options?.map((option) => {
                       const selectedOptions = (answers[q.id] as string[]) || [];
+                      const isOtherSelected = selectedOptions.some(o => o === 'Other' || o.startsWith('Other: '));
                       return (
-                        <label key={option} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            value={option}
-                            checked={selectedOptions.includes(option)}
-                            onChange={(e) => {
-                              const current = (answers[q.id] as string[]) || [];
-                              const updated = e.target.checked
-                                ? [...current, option]
-                                : current.filter(o => o !== option);
-                              setAnswers({ ...answers, [q.id]: updated });
-                            }}
-                            className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
-                          />
-                          <span className="ml-3 text-base text-gray-700">{option}</span>
-                        </label>
+                        <div key={option}>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              value={option}
+                              checked={option === 'Other' ? isOtherSelected : selectedOptions.includes(option)}
+                              onChange={(e) => {
+                                const current = (answers[q.id] as string[]) || [];
+                                let updated: string[];
+                                if (option === 'Other') {
+                                  if (e.target.checked) {
+                                    updated = [...current.filter(o => !o.startsWith('Other')), otherText[q.id] ? `Other: ${otherText[q.id]}` : 'Other'];
+                                  } else {
+                                    updated = current.filter(o => !o.startsWith('Other'));
+                                    setOtherText({ ...otherText, [q.id]: '' });
+                                  }
+                                } else {
+                                  updated = e.target.checked
+                                    ? [...current, option]
+                                    : current.filter(o => o !== option);
+                                }
+                                setAnswers({ ...answers, [q.id]: updated });
+                              }}
+                              className="h-5 w-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0"
+                            />
+                            <span className="ml-3 text-base text-gray-700">{option}</span>
+                          </label>
+                          {option === 'Other' && isOtherSelected && (
+                            <input
+                              type="text"
+                              placeholder="Please specify..."
+                              value={otherText[q.id] || ''}
+                              onChange={(e) => {
+                                setOtherText({ ...otherText, [q.id]: e.target.value });
+                                const current = (answers[q.id] as string[]) || [];
+                                const updated = current.filter(o => !o.startsWith('Other'));
+                                updated.push(e.target.value ? `Other: ${e.target.value}` : 'Other');
+                                setAnswers({ ...answers, [q.id]: updated });
+                              }}
+                              className="mt-2 ml-8 w-full max-w-md px-3 py-2 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          )}
+                        </div>
                       );
                     })}
                   </div>
