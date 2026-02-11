@@ -12,6 +12,7 @@ export default async function AdminDashboard() {
   }
 
   // Fetch all campaigns with claim counts and creator info
+  // Sort by: favorited first, then active, then by created_at
   const { data: campaigns } = await supabaseAdmin
     .from('campaigns')
     .select(`
@@ -19,6 +20,8 @@ export default async function AdminDashboard() {
       claims(count),
       creator:admin_users!created_by(id, email, name)
     `)
+    .order('is_favorited', { ascending: false, nullsFirst: false })
+    .order('is_active', { ascending: false })
     .order('created_at', { ascending: false });
 
   const campaignsWithStats = await Promise.all(

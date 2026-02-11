@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 
 interface Campaign {
   id: string;
@@ -9,6 +8,7 @@ interface Campaign {
   internal_title: string;
   slug: string;
   is_active: boolean;
+  is_favorited: boolean;
   test_mode: boolean;
   capacity_total: number | null;
   created_by: string | null;
@@ -24,8 +24,10 @@ interface Props {
   currentUserEmail: string;
 }
 
-export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) {
+export default function CampaignsFilter({ campaigns: initialCampaigns, currentUserEmail }: Props) {
+  const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [ownerFilter, setOwnerFilter] = useState<string>('all'); // all, mine, specific-email
+  const [togglingFavorite, setTogglingFavorite] = useState<string | null>(null);
 
   // Get unique creators (using email for filter key)
   const creators = Array.from(new Set(
@@ -45,6 +47,43 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
     if (ownerFilter === 'mine') return campaign.creatorEmail === currentUserEmail;
     return campaign.creatorEmail === ownerFilter;
   });
+
+  // Sort filtered campaigns: favorited active first, then active, then favorited inactive, then inactive
+  const sortedCampaigns = [...filteredCampaigns].sort((a, b) => {
+    // First by favorite + active
+    const aScore = (a.is_favorited ? 2 : 0) + (a.is_active ? 1 : 0);
+    const bScore = (b.is_favorited ? 2 : 0) + (b.is_active ? 1 : 0);
+    return bScore - aScore;
+  });
+
+  async function toggleFavorite(campaignId: string) {
+    setTogglingFavorite(campaignId);
+
+    // Optimistic update
+    setCampaigns(prev => prev.map(c =>
+      c.id === campaignId ? { ...c, is_favorited: !c.is_favorited } : c
+    ));
+
+    try {
+      const res = await fetch(`/api/admin/campaigns/${campaignId}/favorite`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        // Revert on error
+        setCampaigns(prev => prev.map(c =>
+          c.id === campaignId ? { ...c, is_favorited: !c.is_favorited } : c
+        ));
+      }
+    } catch {
+      // Revert on error
+      setCampaigns(prev => prev.map(c =>
+        c.id === campaignId ? { ...c, is_favorited: !c.is_favorited } : c
+      ));
+    } finally {
+      setTogglingFavorite(null);
+    }
+  }
 
   return (
     <>
@@ -75,16 +114,32 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
 
       {/* Campaign Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredCampaigns.map((campaign) => {
+        {sortedCampaigns.map((campaign) => {
           const capacityText = (campaign.capacity_total && campaign.capacity_total > 0)
             ? `${campaign.confirmedCount} / ${campaign.capacity_total}`
             : `${campaign.confirmedCount} / Unlimited`;
 
           return (
-          <div key={campaign.id} className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6">
+          <div key={campaign.id} className={`bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 ${campaign.is_favorited ? 'ring-2 ring-yellow-400' : ''}`}>
             <div className="mb-4">
               <div className="flex items-start gap-2 mb-2">
                 <h3 className="text-lg font-semibold text-gray-900 flex-1">{campaign.internal_title}</h3>
+                <button
+                  onClick={() => toggleFavorite(campaign.id)}
+                  disabled={togglingFavorite === campaign.id}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                  title={campaign.is_favorited ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  {campaign.is_favorited ? (
+                    <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5 text-gray-400 hover:text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  )}
+                </button>
                 {campaign.notes && (
                   <div className="group relative">
                     <svg
