@@ -32,6 +32,35 @@ export default async function PreClaimPage({ params }: PreClaimPageProps) {
     notFound();
   }
 
+  // Fetch gifter info if this is a gifted claim
+  let gifterInfo = null;
+  let giftVisibility = null;
+  if (claim.pre_created_by) {
+    const { data: gifter } = await supabaseAdmin
+      .from('admin_users')
+      .select('name, display_name, email, phone, linkedin_url, bio')
+      .eq('id', claim.pre_created_by)
+      .single();
+
+    if (gifter) {
+      // Read visibility flags from claim (with defaults)
+      giftVisibility = {
+        showEmail: claim.gift_show_email ?? false,
+        showPhone: claim.gift_show_phone ?? false,
+        showLinkedIn: claim.gift_show_linkedin ?? true,
+        showBio: claim.gift_show_bio ?? false,
+      };
+
+      gifterInfo = {
+        name: gifter.display_name || gifter.name,
+        email: giftVisibility.showEmail ? gifter.email : null,
+        phone: giftVisibility.showPhone ? gifter.phone : null,
+        linkedinUrl: giftVisibility.showLinkedIn ? gifter.linkedin_url : null,
+        bio: giftVisibility.showBio ? gifter.bio : null,
+      };
+    }
+  }
+
   // If claim already has an address, show already submitted message
   if (claim.address1) {
     return (
@@ -78,6 +107,8 @@ export default async function PreClaimPage({ params }: PreClaimPageProps) {
           prefilledData={claim}
           claimToken={token}
           pageContent={pageContent}
+          gifterInfo={gifterInfo}
+          giftNote={claim.gift_note_to_recipient}
         />
       </div>
     </div>

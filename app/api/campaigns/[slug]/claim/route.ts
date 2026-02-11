@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/server';
 import { generateAddressFingerprint, generateLocationFingerprint, normalizeEmail } from '@/lib/utils/address';
 import { hashIP, generateSessionToken, hashValue } from '@/lib/crypto/hash';
 import { getClientIP, getUserAgent } from '@/lib/utils/request';
-import { sendClaimVerificationEmail } from '@/lib/mailgun';
+import { sendClaimVerificationEmail, sendGiftConfirmationEmail } from '@/lib/mailgun';
 
 /**
  * Handle submission of a pre-created claim (via unique token URL)
@@ -186,6 +186,34 @@ async function handlePreCreatedClaim(
   }
 
   console.log(`[Pre-Claim] Submitted: Token=${claimToken}, Email=${email || 'none'}`);
+
+  // Send gift confirmation email if this is a gifted claim with email
+  const recipientEmail = email || existingClaim.email;
+  if (existingClaim.pre_created_by && recipientEmail) {
+    try {
+      // Fetch gifter info
+      const { data: gifter } = await supabaseAdmin
+        .from('admin_users')
+        .select('name, display_name, linkedin_url')
+        .eq('id', existingClaim.pre_created_by)
+        .single();
+
+      if (gifter) {
+        const gifterName = gifter.display_name || gifter.name;
+        await sendGiftConfirmationEmail(
+          recipientEmail,
+          campaign.title,
+          gifterName,
+          gifter.linkedin_url,
+          existingClaim.gift_note_to_recipient
+        );
+        console.log(`[Pre-Claim] Gift confirmation email sent to ${recipientEmail}`);
+      }
+    } catch (emailError) {
+      console.error('[Pre-Claim] Failed to send gift confirmation email:', emailError);
+      // Don't fail the claim, just log the error
+    }
+  }
 
   return NextResponse.json({
     ok: true,

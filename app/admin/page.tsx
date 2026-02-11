@@ -68,6 +68,12 @@ export default async function AdminDashboard() {
                 </Link>
               )}
               <Link
+                href="/admin/settings"
+                className="text-sm text-gray-700 hover:text-gray-900 font-medium"
+              >
+                Settings
+              </Link>
+              <Link
                 href="/admin/help"
                 className="text-sm text-gray-700 hover:text-gray-900 font-medium"
               >

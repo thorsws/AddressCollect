@@ -147,6 +147,13 @@ export default function CampaignsFilter({ campaigns, currentUserEmail }: Props) 
                 View/Edit Campaign
               </a>
               <a
+                href={`/admin/campaigns/${campaign.id}/gift`}
+                className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
+                title="Gift a book"
+              >
+                Gift
+              </a>
+              <a
                 href={`/c/${campaign.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"

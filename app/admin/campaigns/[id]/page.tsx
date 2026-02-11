@@ -58,7 +58,12 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-6 w-auto" />
               <span>← Dashboard</span>
             </a>
-            <span className="text-sm text-gray-600">{admin.email}</span>
+            <div className="flex items-center space-x-4">
+              <a href="/admin/settings" className="text-sm text-gray-500 hover:text-gray-700">
+                Settings
+              </a>
+              <span className="text-sm text-gray-600">{admin.email}</span>
+            </div>
           </div>
 
           {/* Bottom row: Campaign title | Action buttons */}
@@ -69,6 +74,12 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
             </div>
             <div className="flex items-center space-x-3">
               <PreviewCampaignButton campaignSlug={campaign.slug} />
+              <a
+                href={`/admin/campaigns/${campaign.id}/gift`}
+                className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
+              >
+                Gift a Book
+              </a>
               <a
                 href={`/admin/campaigns/${campaign.id}/edit`}
                 className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"

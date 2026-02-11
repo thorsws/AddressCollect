@@ -45,14 +45,24 @@ interface PageContent {
   contactText: string | null;
 }
 
+interface GifterInfo {
+  name: string;
+  email: string | null;
+  phone: string | null;
+  linkedinUrl: string | null;
+  bio: string | null;
+}
+
 interface Props {
   campaign: Campaign;
   prefilledData: PrefilledData;
   claimToken: string;
   pageContent: PageContent;
+  gifterInfo?: GifterInfo | null;
+  giftNote?: string | null;
 }
 
-export default function TokenClaimFormWrapper({ campaign, prefilledData, claimToken, pageContent }: Props) {
+export default function TokenClaimFormWrapper({ campaign, prefilledData, claimToken, pageContent, gifterInfo, giftNote }: Props) {
   const [success, setSuccess] = useState(false);
   const [requiresVerification, setRequiresVerification] = useState(false);
 
@@ -81,6 +91,45 @@ export default function TokenClaimFormWrapper({ campaign, prefilledData, claimTo
             <p className="text-gray-600">
               Your claim has been confirmed. Thank you!
             </p>
+          )}
+
+          {gifterInfo && (
+            <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-4 text-left">
+              <p className="text-purple-900 font-semibold">
+                A gift from {gifterInfo.name}
+              </p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                {gifterInfo.linkedinUrl && (
+                  <a
+                    href={gifterInfo.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-700 text-sm hover:underline"
+                  >
+                    LinkedIn &rarr;
+                  </a>
+                )}
+                {gifterInfo.email && (
+                  <a
+                    href={`mailto:${gifterInfo.email}`}
+                    className="text-purple-700 text-sm hover:underline"
+                  >
+                    {gifterInfo.email}
+                  </a>
+                )}
+                {gifterInfo.phone && (
+                  <a
+                    href={`tel:${gifterInfo.phone}`}
+                    className="text-purple-700 text-sm hover:underline"
+                  >
+                    {gifterInfo.phone}
+                  </a>
+                )}
+              </div>
+              {giftNote && (
+                <p className="text-purple-800 mt-2 italic">&ldquo;{giftNote}&rdquo;</p>
+              )}
+            </div>
           )}
 
           {pageContent.contactEmail && (
@@ -112,6 +161,50 @@ export default function TokenClaimFormWrapper({ campaign, prefilledData, claimTo
       {pageContent.description && (
         <div className="text-gray-700 mb-6 prose prose-base sm:prose-lg max-w-none">
           <ReactMarkdown>{pageContent.description}</ReactMarkdown>
+        </div>
+      )}
+
+      {gifterInfo && (
+        <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-5">
+          <p className="text-purple-900 font-semibold text-lg">
+            A gift from {gifterInfo.name}
+          </p>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+            {gifterInfo.linkedinUrl && (
+              <a
+                href={gifterInfo.linkedinUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-700 text-sm hover:underline"
+              >
+                Connect on LinkedIn &rarr;
+              </a>
+            )}
+            {gifterInfo.email && (
+              <a
+                href={`mailto:${gifterInfo.email}`}
+                className="text-purple-700 text-sm hover:underline"
+              >
+                {gifterInfo.email}
+              </a>
+            )}
+            {gifterInfo.phone && (
+              <a
+                href={`tel:${gifterInfo.phone}`}
+                className="text-purple-700 text-sm hover:underline"
+              >
+                {gifterInfo.phone}
+              </a>
+            )}
+          </div>
+          {gifterInfo.bio && (
+            <p className="text-purple-800 text-sm mt-2">{gifterInfo.bio}</p>
+          )}
+          {giftNote && (
+            <p className="text-purple-800 mt-3 italic border-t border-purple-200 pt-3">
+              &ldquo;{giftNote}&rdquo;
+            </p>
+          )}
         </div>
       )}
 

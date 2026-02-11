@@ -63,6 +63,13 @@ export async function POST(
         title: data.title || null,
         phone: data.phone || null,
         admin_notes: data.admin_notes || null,
+        gift_note_to_recipient: data.gift_note_to_recipient || null, // Public note shown to recipient
+        gift_note_private: data.gift_note_private || null, // Private note for admin tracking
+        // Visibility flags for gifter info
+        gift_show_email: data.gift_show_email ?? false,
+        gift_show_phone: data.gift_show_phone ?? false,
+        gift_show_linkedin: data.gift_show_linkedin ?? true,
+        gift_show_bio: data.gift_show_bio ?? false,
         status: 'pending', // Pre-created claims start as pending
         pre_created_by: admin.id,
         address_fingerprint: placeholderFingerprint, // Placeholder until address is submitted

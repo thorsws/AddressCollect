@@ -151,6 +151,77 @@ If you didn't request this, please ignore this email.
 }
 
 /**
+ * Send gift confirmation email to recipient
+ * Includes gifter info and personal note
+ */
+export async function sendGiftConfirmationEmail(
+  email: string,
+  campaignTitle: string,
+  gifterName: string,
+  gifterLinkedIn?: string | null,
+  giftNote?: string | null
+): Promise<void> {
+  const mg = getMailgunClient();
+  const domain = process.env.MAILGUN_DOMAIN!;
+  const fromEmail = process.env.MAILGUN_FROM_EMAIL || `noreply@${domain}`;
+
+  const subject = `Your book from ${gifterName} is on its way!`;
+  const text = `
+Great news! Your book claim has been confirmed.
+
+${giftNote ? `${gifterName} says: "${giftNote}"` : `${gifterName} has gifted you a book!`}
+
+${gifterLinkedIn ? `Connect with ${gifterName} on LinkedIn: ${gifterLinkedIn}` : ''}
+
+Campaign: ${campaignTitle}
+
+Your book will be shipped to the address you provided. Thank you!
+  `.trim();
+
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px; margin: 20px 0;">
+    <h2 style="color: #1a1a1a; margin-top: 0;">Your Book is On Its Way!</h2>
+
+    <div style="background-color: #f3e8ff; border-left: 4px solid #9333ea; padding: 15px; margin: 20px 0; border-radius: 0 6px 6px 0;">
+      <p style="margin: 0; font-weight: bold; color: #581c87;">A gift from ${gifterName}</p>
+      ${giftNote ? `<p style="margin: 10px 0 0 0; font-style: italic; color: #6b21a8;">"${giftNote}"</p>` : ''}
+      ${gifterLinkedIn ? `<p style="margin: 10px 0 0 0;"><a href="${gifterLinkedIn}" style="color: #7c3aed;">Connect on LinkedIn →</a></p>` : ''}
+    </div>
+
+    <p>Your claim for <strong>${campaignTitle}</strong> has been confirmed.</p>
+    <p>Your book will be shipped to the address you provided.</p>
+
+    <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+    <p style="color: #999; font-size: 12px;">Thank you for being part of this!</p>
+  </div>
+</body>
+</html>
+  `.trim();
+
+  try {
+    await mg.messages.create(domain, {
+      from: fromEmail,
+      to: [email],
+      subject,
+      text,
+      html,
+    });
+
+    console.log(`[Mailgun] Gift confirmation email sent to ${email}`);
+  } catch (error) {
+    console.error('[Mailgun] Failed to send gift confirmation email:', error);
+    throw new Error('Failed to send gift confirmation email');
+  }
+}
+
+/**
  * Send invite email to new admin user
  * Used when a super admin invites a new user
  */
