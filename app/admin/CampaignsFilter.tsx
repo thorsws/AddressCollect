@@ -89,13 +89,13 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
     <>
       {/* Filter Controls */}
       {creators.length > 0 && (
-        <div className="mb-6 bg-white rounded-lg shadow p-4">
-          <div className="flex items-center gap-4">
-            <label className="text-sm font-medium text-gray-700">Filter by creator:</label>
+        <div className="mb-4 md:mb-6 bg-white rounded-lg shadow p-3 md:p-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+            <label className="text-sm font-medium text-gray-700 shrink-0">Filter by creator:</label>
             <select
               value={ownerFilter}
               onChange={(e) => setOwnerFilter(e.target.value)}
-              className="text-sm border border-gray-300 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500"
+              className="text-sm border border-gray-300 rounded px-3 py-2.5 focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
             >
               <option value="all">All Campaigns ({campaigns.length})</option>
               <option value="mine">My Campaigns ({campaigns.filter(c => c.creatorEmail === currentUserEmail).length})</option>
@@ -105,7 +105,7 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
                 </option>
               ))}
             </select>
-            <span className="ml-auto text-sm text-gray-700 font-medium">
+            <span className="text-sm text-gray-700 font-medium sm:ml-auto">
               Showing {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''}
             </span>
           </div>
@@ -113,21 +113,21 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
       )}
 
       {/* Campaign Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {sortedCampaigns.map((campaign) => {
           const capacityText = (campaign.capacity_total && campaign.capacity_total > 0)
             ? `${campaign.confirmedCount} / ${campaign.capacity_total}`
             : `${campaign.confirmedCount} / Unlimited`;
 
           return (
-          <div key={campaign.id} className={`bg-white rounded-lg shadow hover:shadow-md transition-shadow p-6 ${campaign.is_favorited ? 'ring-2 ring-yellow-400' : ''}`}>
-            <div className="mb-4">
+          <div key={campaign.id} className={`bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 md:p-6 ${campaign.is_favorited ? 'ring-2 ring-yellow-400' : ''}`}>
+            <div className="mb-3 md:mb-4">
               <div className="flex items-start gap-2 mb-2">
-                <h3 className="text-lg font-semibold text-gray-900 flex-1">{campaign.internal_title}</h3>
+                <h3 className="text-base md:text-lg font-semibold text-gray-900 flex-1 leading-tight">{campaign.internal_title}</h3>
                 <button
                   onClick={() => toggleFavorite(campaign.id)}
                   disabled={togglingFavorite === campaign.id}
-                  className="p-1 hover:bg-gray-100 rounded transition-colors disabled:opacity-50"
+                  className="p-1.5 hover:bg-gray-100 rounded transition-colors disabled:opacity-50 touch-manipulation"
                   title={campaign.is_favorited ? 'Remove from favorites' : 'Add to favorites'}
                 >
                   {campaign.is_favorited ? (
@@ -164,7 +164,7 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
                   </div>
                 )}
               </div>
-              <div className="flex gap-1.5 mb-2">
+              <div className="flex flex-wrap gap-1.5 mb-2">
                 <span
                   className={`px-2.5 py-0.5 text-xs font-medium rounded-full ${
                     campaign.is_active
@@ -180,30 +180,31 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
                   </span>
                 )}
               </div>
-              <p className="text-sm text-gray-700 font-medium">/c/{campaign.slug}</p>
-              <p className="text-sm text-gray-600 font-medium mt-1.5">
+              <p className="text-sm text-gray-700 font-medium truncate">/c/{campaign.slug}</p>
+              <p className="text-sm text-gray-600 font-medium mt-1">
                 Created by {campaign.creatorEmail
                   ? (campaign.creatorEmail === currentUserEmail ? 'you' : campaign.creatorName)
                   : 'Unknown'}
               </p>
             </div>
 
-            <div className="mb-4">
-              <p className="text-base text-gray-700 font-semibold">
+            <div className="mb-3 md:mb-4">
+              <p className="text-sm md:text-base text-gray-700 font-semibold">
                 Confirmed: <span className="font-bold text-gray-900">{capacityText}</span>
               </p>
             </div>
 
-            <div className="flex space-x-2">
+            {/* Mobile: Stack buttons, Desktop: Row */}
+            <div className="flex flex-col sm:flex-row gap-2">
               <a
                 href={`/admin/campaigns/${campaign.id}`}
-                className="flex-1 text-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
+                className="flex-1 text-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
               >
-                View/Edit Campaign
+                View/Edit
               </a>
               <a
                 href={`/admin/campaigns/${campaign.id}/gift`}
-                className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
+                className="flex-1 sm:flex-none text-center px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
                 title="Gift a book"
               >
                 Gift
@@ -212,9 +213,9 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
                 href={`/c/${campaign.slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded hover:bg-gray-200"
+                className="flex-1 sm:flex-none text-center px-4 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded hover:bg-gray-200"
               >
-                View Page
+                Preview
               </a>
             </div>
           </div>

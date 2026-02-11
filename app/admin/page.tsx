@@ -4,6 +4,7 @@ import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { canManageUsers } from '@/lib/admin/permissions';
 import CampaignsFilter from './CampaignsFilter';
+import MobileNav from './MobileNav';
 
 export default async function AdminDashboard() {
   const admin = await requireAdmin();
@@ -52,7 +53,8 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm">
+      {/* Desktop Nav */}
+      <nav className="hidden md:block bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-3">
@@ -95,22 +97,30 @@ export default async function AdminDashboard() {
         </div>
       </nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex justify-between items-start">
+      {/* Mobile Nav */}
+      <MobileNav
+        adminName={admin.name}
+        adminRole={admin.role}
+        canManageUsers={canManageUsers(admin.role)}
+      />
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        {/* Header - stacks on mobile */}
+        <div className="mb-6 md:mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Campaigns</h2>
-            <p className="text-base text-gray-700 font-medium">Manage your giveaway campaigns and view claims.</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-1 md:mb-2">Campaigns</h2>
+            <p className="text-sm md:text-base text-gray-700 font-medium">Manage your giveaway campaigns and view claims.</p>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
             <Link
               href="/admin/campaigns/create"
-              className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700"
+              className="px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700 text-center"
             >
               + Create Campaign
             </Link>
             <Link
               href="/admin/addresses"
-              className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
+              className="px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 text-center"
             >
               View All Addresses
             </Link>
