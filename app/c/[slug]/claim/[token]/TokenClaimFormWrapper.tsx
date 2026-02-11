@@ -208,11 +208,6 @@ export default function TokenClaimFormWrapper({ campaign, prefilledData, claimTo
         </div>
       )}
 
-      <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-blue-800 text-base">
-          <strong>Note:</strong> This form has been pre-filled for you. Please review and update any information as needed before submitting.
-        </p>
-      </div>
 
       {pageContent.showBanner && pageContent.bannerUrl && (
         <div className="mb-6">
