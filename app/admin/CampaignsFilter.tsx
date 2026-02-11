@@ -89,7 +89,7 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
     <>
       {/* Filter Controls */}
       {creators.length > 0 && (
-        <div className="mb-4 md:mb-6 bg-white rounded-lg shadow p-3 md:p-4">
+        <div className="mb-4 lg:mb-6 bg-white rounded-lg shadow p-3 lg:p-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
             <label className="text-sm font-medium text-gray-700 shrink-0">Filter by creator:</label>
             <select
@@ -113,17 +113,17 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
       )}
 
       {/* Campaign Grid */}
-      <div className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 lg:gap-6 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
         {sortedCampaigns.map((campaign) => {
           const capacityText = (campaign.capacity_total && campaign.capacity_total > 0)
             ? `${campaign.confirmedCount} / ${campaign.capacity_total}`
             : `${campaign.confirmedCount} / Unlimited`;
 
           return (
-          <div key={campaign.id} className={`bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 md:p-6 ${campaign.is_favorited ? 'ring-2 ring-yellow-400' : ''}`}>
-            <div className="mb-3 md:mb-4">
+          <div key={campaign.id} className={`bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4 lg:p-6 ${campaign.is_favorited ? 'ring-2 ring-yellow-400' : ''}`}>
+            <div className="mb-3 lg:mb-4">
               <div className="flex items-start gap-2 mb-2">
-                <h3 className="text-base md:text-lg font-semibold text-gray-900 flex-1 leading-tight">{campaign.internal_title}</h3>
+                <h3 className="text-base lg:text-lg font-semibold text-gray-900 flex-1 leading-tight">{campaign.internal_title}</h3>
                 <button
                   onClick={() => toggleFavorite(campaign.id)}
                   disabled={togglingFavorite === campaign.id}
@@ -188,8 +188,8 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
               </p>
             </div>
 
-            <div className="mb-3 md:mb-4">
-              <p className="text-sm md:text-base text-gray-700 font-semibold">
+            <div className="mb-3 lg:mb-4">
+              <p className="text-sm lg:text-base text-gray-700 font-semibold">
                 Confirmed: <span className="font-bold text-gray-900">{capacityText}</span>
               </p>
             </div>

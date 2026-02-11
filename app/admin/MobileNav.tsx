@@ -15,7 +15,7 @@ export default function MobileNav({ adminName, adminRole, canManageUsers }: Prop
   const roleDisplay = adminRole === 'super_admin' ? 'Super Admin' : adminRole === 'admin' ? 'Admin' : 'Viewer';
 
   return (
-    <nav className="md:hidden bg-white shadow-sm">
+    <nav className="lg:hidden bg-white shadow-sm">
       <div className="px-4 py-3">
         <div className="flex justify-between items-center">
           <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-8 w-auto" />

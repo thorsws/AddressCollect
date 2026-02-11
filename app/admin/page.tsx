@@ -53,8 +53,8 @@ export default async function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Desktop Nav */}
-      <nav className="hidden md:block bg-white shadow-sm">
+      {/* Desktop Nav - only show on large screens */}
+      <nav className="hidden lg:block bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             <div className="flex items-center space-x-3">
