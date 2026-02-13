@@ -264,47 +264,41 @@ export default function VersionHistory({ campaignId, canEdit }: Props) {
                 {viewMode === 'preview' && (
                 <div className="bg-gray-100 rounded-lg p-4 border border-gray-300">
                   <div className="bg-white rounded-lg shadow-sm p-6">
-                    {/* Logo */}
-                    {viewingVersion.data?.show_logo && (
+                    {Boolean(viewingVersion.data?.show_logo) && (
                       <div className="mb-4 flex justify-center">
                         <img src="/cognitive-kin-logo.svg" alt="Logo" className="h-10 w-auto" />
                       </div>
                     )}
 
-                    {/* Title */}
                     <h2
                       className="text-2xl font-bold text-gray-900 mb-4"
                       dangerouslySetInnerHTML={{ __html: String(viewingVersion.data?.title || 'Untitled') }}
                     />
 
-                    {/* Description */}
-                    {viewingVersion.data?.description && (
+                    {Boolean(viewingVersion.data?.description) && (
                       <div
                         className="text-gray-700 mb-4 prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: String(viewingVersion.data.description) }}
+                        dangerouslySetInnerHTML={{ __html: String(viewingVersion.data?.description) }}
                       />
                     )}
 
-                    {/* Deadline */}
-                    {viewingVersion.data?.ends_at && (
+                    {Boolean(viewingVersion.data?.ends_at) && (
                       <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                         <p className="text-amber-900 font-semibold text-sm">
-                          Deadline: {new Date(String(viewingVersion.data.ends_at)).toLocaleDateString()}
+                          Deadline: {new Date(String(viewingVersion.data?.ends_at)).toLocaleDateString()}
                         </p>
                       </div>
                     )}
 
-                    {/* Scarcity */}
-                    {viewingVersion.data?.show_scarcity && Number(viewingVersion.data?.capacity_total) > 0 && (
+                    {Boolean(viewingVersion.data?.show_scarcity) && Number(viewingVersion.data?.capacity_total) > 0 && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
                         <p className="text-blue-900 font-semibold text-sm">
-                          {viewingVersion.data.capacity_total} spots total
+                          {String(viewingVersion.data?.capacity_total)} spots total
                         </p>
                       </div>
                     )}
 
-                    {/* Banner Link Preview */}
-                    {viewingVersion.data?.show_banner && viewingVersion.data?.banner_url && (
+                    {Boolean(viewingVersion.data?.show_banner) && Boolean(viewingVersion.data?.banner_url) && (
                       <a
                         href={String(viewingVersion.data.banner_url)}
                         target="_blank"
@@ -370,22 +364,20 @@ export default function VersionHistory({ campaignId, canEdit }: Props) {
                       </a>
                     )}
 
-                    {/* Privacy Blurb */}
-                    {viewingVersion.data?.show_privacy_blurb !== false && viewingVersion.data?.privacy_blurb && (
+                    {viewingVersion.data?.show_privacy_blurb !== false && Boolean(viewingVersion.data?.privacy_blurb) && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                         <h3 className="text-green-900 font-bold text-sm mb-1">Privacy Promise</h3>
                         <div
                           className="text-green-800 text-sm"
-                          dangerouslySetInnerHTML={{ __html: String(viewingVersion.data.privacy_blurb) }}
+                          dangerouslySetInnerHTML={{ __html: String(viewingVersion.data?.privacy_blurb) }}
                         />
                       </div>
                     )}
 
-                    {/* Contact Info */}
-                    {viewingVersion.data?.contact_email && (
+                    {Boolean(viewingVersion.data?.contact_email) && (
                       <p className="text-gray-600 text-sm mb-4">
                         {String(viewingVersion.data?.contact_text || 'Questions?')}{' '}
-                        <span className="text-blue-600">{String(viewingVersion.data.contact_email)}</span>
+                        <span className="text-blue-600">{String(viewingVersion.data?.contact_email)}</span>
                       </p>
                     )}
 
@@ -403,25 +395,25 @@ export default function VersionHistory({ campaignId, canEdit }: Props) {
                             <div className="h-8 bg-gray-100 rounded border border-gray-300"></div>
                           </div>
                         </div>
-                        {viewingVersion.data?.require_email && (
+                        {Boolean(viewingVersion.data?.require_email) && (
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Email *</label>
                             <div className="h-8 bg-gray-100 rounded border border-gray-300"></div>
                           </div>
                         )}
-                        {viewingVersion.data?.collect_company && (
+                        {Boolean(viewingVersion.data?.collect_company) && (
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Company</label>
                             <div className="h-8 bg-gray-100 rounded border border-gray-300"></div>
                           </div>
                         )}
-                        {viewingVersion.data?.collect_title && (
+                        {Boolean(viewingVersion.data?.collect_title) && (
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
                             <div className="h-8 bg-gray-100 rounded border border-gray-300"></div>
                           </div>
                         )}
-                        {viewingVersion.data?.collect_phone && (
+                        {Boolean(viewingVersion.data?.collect_phone) && (
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Phone</label>
                             <div className="h-8 bg-gray-100 rounded border border-gray-300"></div>
@@ -452,13 +444,13 @@ export default function VersionHistory({ campaignId, canEdit }: Props) {
                             <div className="h-8 bg-gray-100 rounded border border-gray-300"></div>
                           </div>
                         </div>
-                        {viewingVersion.data?.require_invite_code && (
+                        {Boolean(viewingVersion.data?.require_invite_code) && (
                           <div>
                             <label className="block text-xs font-medium text-gray-700 mb-1">Invite Code *</label>
                             <div className="h-8 bg-gray-100 rounded border border-gray-300"></div>
                           </div>
                         )}
-                        {viewingVersion.data?.enable_questions && (
+                        {Boolean(viewingVersion.data?.enable_questions) && (
                           <div className="bg-purple-50 border border-purple-200 rounded p-3">
                             <p className="text-purple-800 text-xs font-medium">+ Custom Questions</p>
                           </div>
