@@ -13,7 +13,7 @@ async function handlePreCreatedClaim(
   campaign: any,
   data: any
 ): Promise<NextResponse> {
-  const {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode, consent} = data;
+  const {firstName, lastName, email, company, title, phone, linkedinUrl, address1, address2, city, region, postalCode, country, inviteCode, consent} = data;
 
   // Validate required fields
   if (!firstName || !lastName || !address1 || !city || !region || !postalCode || !country) {
@@ -127,6 +127,7 @@ async function handlePreCreatedClaim(
       company: company ? company.trim() : existingClaim.company,
       title: title ? title.trim() : existingClaim.title,
       phone: phone ? phone.trim() : existingClaim.phone,
+      linkedin_url: linkedinUrl ? linkedinUrl.trim() : existingClaim.linkedin_url,
       address1: address1.trim(),
       address2: address2 ? address2.trim() : null,
       city: city.trim(),
@@ -237,6 +238,7 @@ export async function POST(
       company,
       title,
       phone,
+      linkedinUrl,
       address1,
       address2,
       city,
@@ -285,7 +287,7 @@ export async function POST(
       return await handlePreCreatedClaim(
         claimToken,
         campaign,
-        {firstName, lastName, email, company, title, phone, address1, address2, city, region, postalCode, country, inviteCode, consent}
+        {firstName, lastName, email, company, title, phone, linkedinUrl, address1, address2, city, region, postalCode, country, inviteCode, consent}
       );
     }
 
@@ -477,6 +479,7 @@ export async function POST(
         company: company ? company.trim() : null,
         title: title ? title.trim() : null,
         phone: phone ? phone.trim() : null,
+        linkedin_url: linkedinUrl ? linkedinUrl.trim() : null,
         address1: address1.trim(),
         address2: address2 ? address2.trim() : null,
         city: city.trim(),

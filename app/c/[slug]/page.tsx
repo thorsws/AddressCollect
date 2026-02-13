@@ -170,6 +170,31 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               <img src="/cognitive-kin-logo.svg" alt="Cognitive Kin" className="h-12 w-auto" />
             </div>
           )}
+
+          {campaign.show_feature_section && (campaign.feature_image_url || campaign.feature_paragraph) && (
+            <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-6">
+              <div className={`flex ${campaign.feature_image_url ? 'flex-col sm:flex-row items-center sm:items-start gap-6' : ''}`}>
+                {campaign.feature_image_url && (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={campaign.feature_image_url}
+                      alt="Featured"
+                      className="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
+                {campaign.feature_paragraph && (
+                  <div className="flex-1">
+                    <RichContent
+                      content={campaign.feature_paragraph}
+                      className="text-gray-800 prose prose-base max-w-none"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="mb-8">
             <RichContent
               content={campaign.title}

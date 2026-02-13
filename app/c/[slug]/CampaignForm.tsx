@@ -15,6 +15,7 @@ interface Campaign {
   collect_company: boolean;
   collect_phone: boolean;
   collect_title: boolean;
+  collect_linkedin: boolean;
   test_mode: boolean;
   show_banner: boolean;
   banner_url: string | null;
@@ -39,6 +40,7 @@ interface FormData {
   company: string;
   title: string;
   phone: string;
+  linkedinUrl: string;
   address1: string;
   address2: string;
   city: string;
@@ -55,6 +57,7 @@ const initialFormData: FormData = {
   company: '',
   title: '',
   phone: '',
+  linkedinUrl: '',
   address1: '',
   address2: '',
   city: '',
@@ -278,6 +281,23 @@ export default function CampaignForm({ campaign, questions = [], notYetStarted =
             name="phone"
             value={formData.phone}
             onChange={handleChange}
+            className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+      )}
+
+      {campaign.collect_linkedin && (
+        <div>
+          <label htmlFor="linkedinUrl" className="block text-base font-semibold text-gray-700 mb-2">
+            LinkedIn Profile URL
+          </label>
+          <input
+            type="url"
+            id="linkedinUrl"
+            name="linkedinUrl"
+            value={formData.linkedinUrl}
+            onChange={handleChange}
+            placeholder="https://linkedin.com/in/yourprofile"
             className="w-full px-4 py-3 text-base border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>

@@ -23,6 +23,7 @@ interface Campaign {
   collect_company: boolean;
   collect_phone: boolean;
   collect_title: boolean;
+  collect_linkedin: boolean;
   enable_questions: boolean;
   questions_intro_text: string | null;
   privacy_blurb: string | null;
@@ -34,6 +35,9 @@ interface Campaign {
   show_banner: boolean;
   banner_url: string | null;
   show_logo: boolean;
+  show_feature_section: boolean;
+  feature_image_url: string | null;
+  feature_paragraph: string | null;
   contact_email: string | null;
   contact_text: string | null;
   consent_text: string | null;
@@ -80,6 +84,7 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
     collect_company: campaign.collect_company,
     collect_phone: campaign.collect_phone,
     collect_title: campaign.collect_title,
+    collect_linkedin: campaign.collect_linkedin || false,
     enable_questions: campaign.enable_questions,
     questions_intro_text: campaign.questions_intro_text || '',
     privacy_blurb: campaign.privacy_blurb || '',
@@ -91,6 +96,9 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
     show_banner: campaign.show_banner,
     show_logo: campaign.show_logo,
     banner_url: campaign.banner_url || '',
+    show_feature_section: campaign.show_feature_section || false,
+    feature_image_url: campaign.feature_image_url || '',
+    feature_paragraph: campaign.feature_paragraph || '',
     contact_email: campaign.contact_email || '',
     contact_text: campaign.contact_text || 'If you have any questions, please email',
     consent_text: campaign.consent_text || 'I consent to providing my information for this campaign. I understand my data will be used solely for this purpose, stored securely, and deleted within 60 days. I can request deletion at any time by contacting the organizer.',
@@ -458,6 +466,16 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
                 />
                 <span className="ml-2 text-sm text-gray-700">Collect phone number</span>
               </label>
+
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.collect_linkedin}
+                  onChange={(e) => setFormData({ ...formData, collect_linkedin: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Collect LinkedIn profile URL</span>
+              </label>
             </div>
           </div>
 
@@ -705,6 +723,60 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
                     We&apos;ll fetch Open Graph metadata from this URL to display as a preview card
                   </p>
                 </div>
+              )}
+            </div>
+          </div>
+
+          {/* Feature Section */}
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Feature Section</h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Display a featured image and paragraph after the logo - useful for featuring a client, testimonial, or promotional content.
+            </p>
+
+            <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.show_feature_section}
+                  onChange={(e) => setFormData({ ...formData, show_feature_section: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show feature section on campaign page</span>
+              </label>
+
+              {formData.show_feature_section && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Feature Image URL
+                    </label>
+                    <input
+                      type="url"
+                      value={formData.feature_image_url}
+                      onChange={(e) => setFormData({ ...formData, feature_image_url: e.target.value })}
+                      placeholder="https://example.com/client-photo.jpg"
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      URL to an image (e.g., client photo, product image). Leave empty for text-only.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Feature Paragraph
+                    </label>
+                    <RichTextEditor
+                      value={formData.feature_paragraph}
+                      onChange={(value) => setFormData({ ...formData, feature_paragraph: value })}
+                      rows={3}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Text to display alongside the image (e.g., client testimonial, promotional message)
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           </div>
