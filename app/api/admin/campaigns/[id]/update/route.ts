@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { canEditCampaign } from '@/lib/admin/permissions';
+import { canEditCampaign } from '@/lib/permissions/campaignAccess';
 
 // Helper to build campaign data object for versioning
 function buildCampaignData(data: Record<string, unknown>) {
@@ -71,8 +71,8 @@ export async function PUT(
       );
     }
 
-    // Check permission to edit
-    if (!canEditCampaign(admin.role, existingCampaign.created_by, admin.id)) {
+    // Check permission to edit (checks campaign_members table)
+    if (!(await canEditCampaign(admin.id, id, admin.role))) {
       return NextResponse.json(
         { error: 'Forbidden - You do not have permission to edit this campaign' },
         { status: 403 }

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { canEditCampaign } from '@/lib/admin/permissions';
+import { canEditCampaign } from '@/lib/permissions/campaignAccess';
 
 export async function POST(
   request: NextRequest,
@@ -26,8 +26,8 @@ export async function POST(
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    // Check permission
-    if (!canEditCampaign(admin.role, campaign.created_by, admin.id)) {
+    // Check permission (checks campaign_members table)
+    if (!(await canEditCampaign(admin.id, id, admin.role))) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
