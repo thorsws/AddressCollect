@@ -21,6 +21,7 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
     first_name: '',
     last_name: '',
     email: '',
+    linkedin_url: '',
     company: '',
     title: '',
     phone: '',
@@ -62,6 +63,7 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
         first_name: '',
         last_name: '',
         email: '',
+        linkedin_url: '',
         company: '',
         title: '',
         phone: '',
@@ -175,6 +177,21 @@ export default function PreCreateClaimForm({ campaignId, campaignSlug }: PreCrea
               className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <p className="text-xs text-gray-500 mt-1">If provided, will be prefilled but they can change it</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              LinkedIn URL (optional)
+            </label>
+            <input
+              type="url"
+              name="linkedin_url"
+              value={formData.linkedin_url}
+              onChange={handleChange}
+              placeholder="https://linkedin.com/in/username"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="text-xs text-gray-500 mt-1">For tracking - saved with the claim</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
