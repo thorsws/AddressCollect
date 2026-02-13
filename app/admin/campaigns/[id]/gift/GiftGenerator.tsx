@@ -60,6 +60,10 @@ function saveVisibilitySettings(settings: VisibilitySettings) {
 export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile }: Props) {
   const [recipientFirstName, setRecipientFirstName] = useState('');
   const [recipientLastName, setRecipientLastName] = useState('');
+  // Tracking fields - always saved, pre-filled if campaign collects them
+  const [recipientLinkedIn, setRecipientLinkedIn] = useState('');
+  const [recipientCompany, setRecipientCompany] = useState('');
+  const [recipientTitle, setRecipientTitle] = useState('');
   // Pre-fill with default message from profile
   const [noteToRecipient, setNoteToRecipient] = useState(gifterProfile.defaultMessage || '');
   const [notePrivate, setNotePrivate] = useState('');
@@ -98,6 +102,9 @@ export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile 
         body: JSON.stringify({
           first_name: recipientFirstName.trim(),
           last_name: recipientLastName.trim(),
+          linkedin_url: recipientLinkedIn.trim() || null,
+          company: recipientCompany.trim() || null,
+          title: recipientTitle.trim() || null,
           gift_note_to_recipient: noteToRecipient.trim() || null,
           gift_note_private: notePrivate.trim() || null,
           gift_show_email: visibility.showEmail,
@@ -165,6 +172,9 @@ export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile 
     setGeneratedGift(null);
     setRecipientFirstName('');
     setRecipientLastName('');
+    setRecipientLinkedIn('');
+    setRecipientCompany('');
+    setRecipientTitle('');
     setNoteToRecipient('');
     setNotePrivate('');
     setError(null);
@@ -289,6 +299,43 @@ export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile 
           </div>
           <p className="text-xs text-gray-500 mt-1">
             Pre-fills their name on the claim form
+          </p>
+        </div>
+
+        {/* Recipient Info - For tracking */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <label className="block text-sm font-medium text-amber-800 mb-3">
+            Tracking Info <span className="text-amber-600 font-normal">(for your records)</span>
+          </label>
+          <div className="space-y-3">
+            <div>
+              <input
+                type="url"
+                value={recipientLinkedIn}
+                onChange={(e) => setRecipientLinkedIn(e.target.value)}
+                placeholder="LinkedIn URL (e.g., linkedin.com/in/name)"
+                className="w-full px-3 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm bg-white"
+              />
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={recipientCompany}
+                onChange={(e) => setRecipientCompany(e.target.value)}
+                placeholder="Company"
+                className="flex-1 px-3 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm bg-white"
+              />
+              <input
+                type="text"
+                value={recipientTitle}
+                onChange={(e) => setRecipientTitle(e.target.value)}
+                placeholder="Role/Title"
+                className="flex-1 px-3 py-2 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 text-sm bg-white"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-amber-700 mt-2">
+            Saved with the claim. If campaign collects these fields, they&apos;ll be pre-filled for recipient.
           </p>
         </div>
 

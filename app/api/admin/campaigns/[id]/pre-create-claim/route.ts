@@ -62,6 +62,7 @@ export async function POST(
         company: data.company || null,
         title: data.title || null,
         phone: data.phone || null,
+        linkedin_url: data.linkedin_url || null,
         admin_notes: data.admin_notes || null,
         gift_note_to_recipient: data.gift_note_to_recipient || null, // Public note shown to recipient
         gift_note_private: data.gift_note_private || null, // Private note for admin tracking
