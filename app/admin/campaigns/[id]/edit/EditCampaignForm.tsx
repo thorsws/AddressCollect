@@ -71,6 +71,8 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
   const [unlimitedCapacity, setUnlimitedCapacity] = useState(!campaign.capacity_total);
   const [changeSummary, setChangeSummary] = useState('');
 
+  const [uploadingFeatureImage, setUploadingFeatureImage] = useState(false);
+
   const [formData, setFormData] = useState({
     title: campaign.title,
     internal_title: campaign.internal_title,
@@ -107,6 +109,39 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
     ends_at: campaign.ends_at ? utcToEastern(campaign.ends_at) : '',
     notes: campaign.notes || '',
   });
+
+  const handleFeatureImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingFeatureImage(true);
+    setError('');
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch('/api/admin/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Upload failed');
+      }
+
+      const result = await response.json();
+      setFormData(prev => ({ ...prev, feature_image_url: result.url }));
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Upload failed';
+      setError(message);
+    } finally {
+      setUploadingFeatureImage(false);
+      // Reset file input
+      e.target.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent, saveAsDraft = false) => {
     e.preventDefault();
@@ -749,18 +784,58 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Feature Image URL
+                      Feature Image
                     </label>
-                    <input
-                      type="url"
-                      value={formData.feature_image_url}
-                      onChange={(e) => setFormData({ ...formData, feature_image_url: e.target.value })}
-                      placeholder="https://example.com/client-photo.jpg"
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={formData.feature_image_url}
+                        onChange={(e) => setFormData({ ...formData, feature_image_url: e.target.value })}
+                        placeholder="https://example.com/client-photo.jpg"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <label className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 cursor-pointer flex items-center gap-2 whitespace-nowrap disabled:opacity-50">
+                        <input
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          onChange={handleFeatureImageUpload}
+                          className="hidden"
+                          disabled={uploadingFeatureImage}
+                        />
+                        {uploadingFeatureImage ? (
+                          <>
+                            <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            Upload
+                          </>
+                        )}
+                      </label>
+                    </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      URL to an image (e.g., client photo, product image). Leave empty for text-only.
+                      Upload an image or paste a URL. Max 5MB (JPEG, PNG, GIF, WebP).
                     </p>
+                    {formData.feature_image_url && (
+                      <div className="mt-3">
+                        <p className="text-xs text-gray-500 mb-1">Preview:</p>
+                        <img
+                          src={formData.feature_image_url}
+                          alt="Feature preview"
+                          className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div>
