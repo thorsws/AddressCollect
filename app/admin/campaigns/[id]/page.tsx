@@ -1,7 +1,6 @@
 import { redirect, notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { canEditCampaign } from '@/lib/admin/permissions';
 import EnhancedClaimsTable from './EnhancedClaimsTable';
 import InviteCodesManager from './InviteCodesManager';
 import PreCreateClaimForm from './PreCreateClaimForm';
@@ -32,6 +31,20 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
   if (campaignError || !campaign) {
     notFound();
   }
+
+  // Check if user is a campaign member with edit access
+  const { data: membership } = await supabaseAdmin
+    .from('campaign_members')
+    .select('role')
+    .eq('campaign_id', id)
+    .eq('user_id', admin.id)
+    .single();
+
+  const memberRole = membership?.role;
+  const canEdit = admin.role === 'super_admin' ||
+                  campaign.created_by === admin.id ||
+                  memberRole === 'owner' ||
+                  memberRole === 'editor';
 
   // Fetch claims
   const { data: claims } = await supabaseAdmin
@@ -107,7 +120,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               >
                 My QR Code
               </a>
-              {canEditCampaign(admin.role, campaign.created_by, admin.id) && (
+              {canEdit && (
                 <a
                   href={`/admin/campaigns/${campaign.id}/edit`}
                   className="px-3 py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-blue-700 text-center"
@@ -190,7 +203,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
         <div className="mb-4 sm:mb-6">
           <VersionHistory
             campaignId={campaign.id}
-            canEdit={canEditCampaign(admin.role, campaign.created_by, admin.id)}
+            canEdit={canEdit}
           />
         </div>
 
