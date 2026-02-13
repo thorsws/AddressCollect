@@ -9,6 +9,7 @@ interface GifterProfile {
   linkedinUrl: string | null;
   phone: string | null;
   bio: string | null;
+  defaultMessage: string | null;
 }
 
 interface Props {
@@ -59,7 +60,8 @@ function saveVisibilitySettings(settings: VisibilitySettings) {
 export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile }: Props) {
   const [recipientFirstName, setRecipientFirstName] = useState('');
   const [recipientLastName, setRecipientLastName] = useState('');
-  const [noteToRecipient, setNoteToRecipient] = useState('');
+  // Pre-fill with default message from profile
+  const [noteToRecipient, setNoteToRecipient] = useState(gifterProfile.defaultMessage || '');
   const [notePrivate, setNotePrivate] = useState('');
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -304,7 +306,9 @@ export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile 
             className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-base"
           />
           <p className="text-xs text-gray-500 mt-1">
-            Shown on the claim form and confirmation email
+            {gifterProfile.defaultMessage
+              ? 'Pre-filled from your profile. Edit per gift or change default in Profile Settings.'
+              : 'Shown on the claim form and confirmation email'}
           </p>
         </div>
 
@@ -380,6 +384,42 @@ export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile 
           </div>
         </div>
 
+        {/* Live Preview */}
+        <div className="border-t pt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Recipient will see:
+          </label>
+          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 min-h-[80px]">
+            <p className="text-purple-900 font-semibold">
+              A gift from {gifterProfile.name}
+            </p>
+            {noteToRecipient && (
+              <p className="text-purple-800 text-sm mt-2 italic">
+                &ldquo;{noteToRecipient}&rdquo;
+              </p>
+            )}
+            {visibility.showBio && gifterProfile.bio && (
+              <p className="text-purple-700 text-sm mt-2">{gifterProfile.bio}</p>
+            )}
+            <div className="flex flex-wrap gap-3 mt-2">
+              {visibility.showLinkedIn && gifterProfile.linkedinUrl && (
+                <span className="text-purple-700 text-sm">Connect on LinkedIn →</span>
+              )}
+              {visibility.showEmail && (
+                <span className="text-purple-700 text-sm">{gifterProfile.email}</span>
+              )}
+              {visibility.showPhone && gifterProfile.phone && (
+                <span className="text-purple-700 text-sm">{gifterProfile.phone}</span>
+              )}
+            </div>
+            {!noteToRecipient && !visibility.showBio && !visibility.showLinkedIn && !visibility.showEmail && !visibility.showPhone && (
+              <p className="text-purple-600 text-sm mt-2 opacity-60">
+                Add a note or select options above to personalize
+              </p>
+            )}
+          </div>
+        </div>
+
         {/* Generate Button */}
         <button
           type="submit"
@@ -388,17 +428,6 @@ export default function GiftGenerator({ campaignId, campaignSlug, gifterProfile 
         >
           {generating ? 'Generating...' : 'Generate Gift Link'}
         </button>
-
-        {/* Gifter Info Preview */}
-        <div className="pt-4 border-t">
-          <p className="text-xs text-gray-500 text-center">
-            Recipients will see: &quot;A gift from {gifterProfile.name}&quot;
-            {visibility.showLinkedIn && gifterProfile.linkedinUrl && ' + LinkedIn'}
-            {visibility.showEmail && ' + Email'}
-            {visibility.showPhone && gifterProfile.phone && ' + Phone'}
-            {visibility.showBio && gifterProfile.bio && ' + Bio'}
-          </p>
-        </div>
       </form>
     </div>
   );

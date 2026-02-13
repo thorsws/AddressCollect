@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
         collect_phone: data.collect_phone === true,
         collect_title: data.collect_title === true,
         privacy_blurb: data.privacy_blurb || null,
+        show_privacy_blurb: data.show_privacy_blurb !== false,
         max_claims_per_email: parseInt(data.max_claims_per_email) || 1,
         max_claims_per_ip_per_day: parseInt(data.max_claims_per_ip_per_day) || 5,
         test_mode: data.test_mode === true,

@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import RichTextEditor from '@/components/RichTextEditor';
+import RichContent from '@/components/RichContent';
 
 interface Profile {
   id: string;
@@ -26,6 +28,7 @@ export default function ProfileSettingsPage() {
   const [linkedinUrl, setLinkedinUrl] = useState('');
   const [bio, setBio] = useState('');
   const [phone, setPhone] = useState('');
+  const [defaultMessage, setDefaultMessage] = useState('');
 
   useEffect(() => {
     fetchProfile();
@@ -47,6 +50,7 @@ export default function ProfileSettingsPage() {
       setLinkedinUrl(data.linkedin_url || '');
       setBio(data.bio || '');
       setPhone(data.phone || '');
+      setDefaultMessage(data.default_message || '');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load profile');
     } finally {
@@ -69,6 +73,7 @@ export default function ProfileSettingsPage() {
           linkedin_url: linkedinUrl,
           bio: bio,
           phone: phone,
+          default_message: defaultMessage,
         }),
       });
 
@@ -209,20 +214,32 @@ export default function ProfileSettingsPage() {
             </div>
 
             <div>
+              <label htmlFor="defaultMessage" className="block text-sm font-medium text-gray-700 mb-1">
+                Default Gift Message
+              </label>
+              <RichTextEditor
+                value={defaultMessage}
+                onChange={setDefaultMessage}
+                placeholder="e.g., Great meeting you! Enjoy the book..."
+                rows={2}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Optional. Default message shown to recipients. Can be overridden per QR code.
+              </p>
+            </div>
+
+            <div>
               <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
                 Short Bio
               </label>
-              <textarea
-                id="bio"
+              <RichTextEditor
                 value={bio}
-                onChange={(e) => setBio(e.target.value)}
+                onChange={setBio}
                 placeholder="A brief introduction about yourself..."
                 rows={3}
-                maxLength={500}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Optional. Max 500 characters.
+                Optional. Supports formatting like bold, italic, and links.
               </p>
             </div>
 
@@ -255,7 +272,7 @@ export default function ProfileSettingsPage() {
                 </a>
               )}
               {bio && (
-                <p className="text-purple-800 text-sm mt-2">{bio}</p>
+                <RichContent content={bio} className="text-purple-800 text-sm mt-2" />
               )}
             </div>
           </div>

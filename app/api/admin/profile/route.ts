@@ -10,7 +10,7 @@ export async function GET() {
   try {
     const { data: profile, error } = await supabaseAdmin
       .from('admin_users')
-      .select('id, email, name, display_name, linkedin_url, bio, phone')
+      .select('id, email, name, display_name, linkedin_url, bio, phone, default_message')
       .eq('id', admin.id)
       .single();
 
@@ -38,7 +38,7 @@ export async function PUT(request: NextRequest) {
     const data = await request.json();
 
     // Only allow updating specific profile fields
-    const allowedFields = ['display_name', 'linkedin_url', 'bio', 'phone'];
+    const allowedFields = ['display_name', 'linkedin_url', 'bio', 'phone', 'default_message'];
     const updateData: Record<string, string | null> = {};
 
     for (const field of allowedFields) {
@@ -69,7 +69,7 @@ export async function PUT(request: NextRequest) {
         updated_by: admin.id,
       })
       .eq('id', admin.id)
-      .select('id, email, name, display_name, linkedin_url, bio, phone')
+      .select('id, email, name, display_name, linkedin_url, bio, phone, default_message')
       .single();
 
     if (error) {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Question {
   id: string;
@@ -33,6 +34,7 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
     options: ['', ''],
   });
   const [loading, setLoading] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; questionId: string }>({ isOpen: false, questionId: '' });
 
   const startEdit = (question: Question) => {
     setEditingId(question.id);
@@ -136,8 +138,13 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
     setLoading(false);
   };
 
-  const deleteQuestion = async (questionId: string) => {
-    if (!confirm('Delete this question? Any existing answers will also be deleted.')) return;
+  const handleDeleteQuestion = (questionId: string) => {
+    setDeleteConfirm({ isOpen: true, questionId });
+  };
+
+  const confirmDeleteQuestion = async () => {
+    const questionId = deleteConfirm.questionId;
+    setDeleteConfirm({ isOpen: false, questionId: '' });
 
     try {
       const response = await fetch(`/api/admin/campaigns/${campaignId}/questions/${questionId}`, {
@@ -192,6 +199,16 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Question"
+        message="Delete this question? Any existing answers will also be deleted."
+        confirmText="Delete"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        onConfirm={confirmDeleteQuestion}
+        onCancel={() => setDeleteConfirm({ isOpen: false, questionId: '' })}
+      />
+
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Custom Questions</h2>
         {!isAdding && !editingId && (
@@ -348,7 +365,7 @@ export default function QuestionsManager({ campaignId, initialQuestions }: Props
                       Edit
                     </button>
                     <button
-                      onClick={() => deleteQuestion(q.id)}
+                      onClick={() => handleDeleteQuestion(q.id)}
                       className="text-red-600 hover:text-red-700 text-sm"
                     >
                       Delete

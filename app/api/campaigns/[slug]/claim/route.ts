@@ -247,6 +247,7 @@ export async function POST(
       claimToken, // Optional: for pre-created claims
       answers, // Custom question answers: { questionId: answer }
       consent, // User consent to data collection
+      gifted_by, // Optional: admin user ID for static gift codes
     } = body;
 
     // 1. Load campaign
@@ -491,6 +492,7 @@ export async function POST(
         consent_given: consent === true,
         consent_timestamp: consent === true ? new Date().toISOString() : null,
         confirmed_at: initialStatus === 'confirmed' ? new Date().toISOString() : null,
+        pre_created_by: gifted_by || null, // For static gift codes
       })
       .select()
       .single();

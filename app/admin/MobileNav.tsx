@@ -44,20 +44,29 @@ export default function MobileNav({ adminName, adminRole, canManageUsers }: Prop
             {adminName} ({roleDisplay})
           </div>
           {canManageUsers && (
-            <Link
-              href="/admin/users"
-              className="block py-2.5 px-3 text-purple-600 font-semibold rounded hover:bg-gray-50"
-              onClick={() => setIsOpen(false)}
-            >
-              Manage Users
-            </Link>
+            <>
+              <Link
+                href="/admin/users"
+                className="block py-2.5 px-3 text-purple-600 font-semibold rounded hover:bg-gray-50"
+                onClick={() => setIsOpen(false)}
+              >
+                Manage Users
+              </Link>
+              <Link
+                href="/admin/global-settings"
+                className="block py-2.5 px-3 text-purple-600 font-semibold rounded hover:bg-gray-50"
+                onClick={() => setIsOpen(false)}
+              >
+                Global Settings
+              </Link>
+            </>
           )}
           <Link
             href="/admin/settings"
             className="block py-2.5 px-3 text-gray-700 font-medium rounded hover:bg-gray-50"
             onClick={() => setIsOpen(false)}
           >
-            Settings
+            Profile
           </Link>
           <Link
             href="/admin/help"

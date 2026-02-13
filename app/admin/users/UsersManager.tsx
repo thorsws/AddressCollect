@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface User {
   id: string;
@@ -22,6 +23,7 @@ export default function UsersManager({ initialUsers, currentUserId }: UsersManag
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; userId: string }>({ isOpen: false, userId: '' });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -109,13 +111,17 @@ export default function UsersManager({ initialUsers, currentUserId }: UsersManag
     }
   };
 
-  const handleDelete = async (userId: string) => {
+  const handleDelete = (userId: string) => {
     if (userId === currentUserId) {
       setError('Cannot delete your own account');
       return;
     }
+    setDeleteConfirm({ isOpen: true, userId });
+  };
 
-    if (!confirm('Delete this user? This action cannot be undone.')) return;
+  const confirmDelete = async () => {
+    const userId = deleteConfirm.userId;
+    setDeleteConfirm({ isOpen: false, userId: '' });
 
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
@@ -161,6 +167,16 @@ export default function UsersManager({ initialUsers, currentUserId }: UsersManag
 
   return (
     <div>
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title="Delete User"
+        message="Delete this user? This action cannot be undone."
+        confirmText="Delete"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteConfirm({ isOpen: false, userId: '' })}
+      />
+
       {/* Messages */}
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">

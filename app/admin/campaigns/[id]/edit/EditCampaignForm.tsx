@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { utcToEastern, easternToUtc } from '@/lib/utils/timezone';
 
 const QuestionsManager = dynamic(() => import('../QuestionsManager'), { ssr: false });
+const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { ssr: false });
 
 interface Campaign {
   id: string;
@@ -25,6 +26,7 @@ interface Campaign {
   enable_questions: boolean;
   questions_intro_text: string | null;
   privacy_blurb: string | null;
+  show_privacy_blurb: boolean;
   max_claims_per_email: number;
   max_claims_per_ip_per_day: number;
   max_claims_per_address: number;
@@ -34,6 +36,7 @@ interface Campaign {
   show_logo: boolean;
   contact_email: string | null;
   contact_text: string | null;
+  consent_text: string | null;
   kiosk_mode: boolean;
   starts_at: string | null;
   ends_at: string | null;
@@ -52,13 +55,17 @@ interface Question {
 interface Props {
   campaign: Campaign;
   initialQuestions: Question[];
+  globalDefaults?: Record<string, string>;
 }
 
-export default function EditCampaignForm({ campaign, initialQuestions }: Props) {
+export default function EditCampaignForm({ campaign, initialQuestions, globalDefaults = {} }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [unlimitedCapacity, setUnlimitedCapacity] = useState(!campaign.capacity_total);
+  const [changeSummary, setChangeSummary] = useState('');
 
   const [formData, setFormData] = useState({
     title: campaign.title,
@@ -76,6 +83,7 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
     enable_questions: campaign.enable_questions,
     questions_intro_text: campaign.questions_intro_text || '',
     privacy_blurb: campaign.privacy_blurb || '',
+    show_privacy_blurb: campaign.show_privacy_blurb !== false,
     max_claims_per_email: campaign.max_claims_per_email,
     max_claims_per_ip_per_day: campaign.max_claims_per_ip_per_day,
     max_claims_per_address: campaign.max_claims_per_address || 1,
@@ -85,24 +93,32 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
     banner_url: campaign.banner_url || '',
     contact_email: campaign.contact_email || '',
     contact_text: campaign.contact_text || 'If you have any questions, please email',
+    consent_text: campaign.consent_text || 'I consent to providing my information for this campaign. I understand my data will be used solely for this purpose, stored securely, and deleted within 60 days. I can request deletion at any time by contacting the organizer.',
     kiosk_mode: campaign.kiosk_mode,
     starts_at: campaign.starts_at ? utcToEastern(campaign.starts_at) : '',
     ends_at: campaign.ends_at ? utcToEastern(campaign.ends_at) : '',
     notes: campaign.notes || '',
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent, saveAsDraft = false) => {
     e.preventDefault();
-    setLoading(true);
+    if (saveAsDraft) {
+      setSavingDraft(true);
+    } else {
+      setLoading(true);
+    }
     setError('');
 
     try {
       // Convert datetime values from Eastern to UTC before sending
       const dataToSend = {
         ...formData,
+        slug: campaign.slug, // Include slug for versioning
         capacity_total: unlimitedCapacity ? 0 : formData.capacity_total,
         starts_at: formData.starts_at ? easternToUtc(formData.starts_at) : '',
         ends_at: formData.ends_at ? easternToUtc(formData.ends_at) : '',
+        save_as_draft: saveAsDraft,
+        change_summary: changeSummary || null,
       };
 
       const response = await fetch(`/api/admin/campaigns/${campaign.id}/update`, {
@@ -116,11 +132,22 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
         throw new Error(data.error || 'Failed to update campaign');
       }
 
-      router.push(`/admin/campaigns/${campaign.id}`);
-      router.refresh();
-    } catch (err: any) {
-      setError(err.message);
+      const result = await response.json();
+
+      if (saveAsDraft) {
+        // Show success message for draft save
+        setSuccess('Draft saved! Changes are not yet live.');
+        setSavingDraft(false);
+      } else {
+        // Redirect to campaign page after publishing
+        router.push(`/admin/campaigns/${campaign.id}`);
+        router.refresh();
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      setError(message);
       setLoading(false);
+      setSavingDraft(false);
     }
   };
 
@@ -128,26 +155,42 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">Edit Campaign</h1>
-              <p className="text-sm text-gray-500">{campaign.slug}</p>
+          <div className="flex justify-between items-center py-3 sm:h-16 sm:py-0">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-lg sm:text-xl font-bold text-gray-900 truncate">Edit Campaign</h1>
+              <p className="text-xs sm:text-sm text-gray-500 truncate">{campaign.slug}</p>
             </div>
             <a
               href={`/admin/campaigns/${campaign.id}`}
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="flex items-center text-blue-600 hover:text-blue-700 ml-4 whitespace-nowrap bg-blue-50 sm:bg-transparent px-3 py-1.5 sm:px-0 sm:py-0 rounded-md"
             >
-              ← Back to Campaign
+              <svg className="w-4 h-4 mr-1 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-xs sm:text-sm font-medium sm:font-normal">Back</span>
             </a>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}
+            </div>
+          )}
+
+          {success && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded flex items-center justify-between">
+              <span>{success}</span>
+              <button
+                type="button"
+                onClick={() => setSuccess('')}
+                className="text-green-700 hover:text-green-900 ml-4"
+              >
+                ✕
+              </button>
             </div>
           )}
 
@@ -176,12 +219,10 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Public Campaign Title * <span className="text-gray-500 text-xs">(Shown to users)</span>
                 </label>
-                <input
-                  type="text"
-                  required
+                <RichTextEditor
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData({ ...formData, title: value })}
+                  rows={2}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   This title is shown on the public campaign page
@@ -204,12 +245,14 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
                 </label>
-                <textarea
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData({ ...formData, description: value })}
+                  rows={4}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Use the toolbar to format text with bold, italic, links, and lists
+                </p>
               </div>
 
               <div>
@@ -436,8 +479,8 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                 Collect additional information from users with custom questions
               </p>
 
-              {formData.enable_questions && (
-                <div className="ml-6 space-y-3">
+              <div className="ml-6 space-y-3">
+                {formData.enable_questions && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Questions Section Intro Text (optional)
@@ -453,14 +496,17 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                       This text will appear above your questions to provide context to users
                     </p>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {formData.enable_questions && (
-                <div className="mt-4 pl-6 border-l-2 border-blue-200">
-                  <QuestionsManager campaignId={campaign.id} initialQuestions={initialQuestions} />
-                </div>
-              )}
+              <div className={`mt-4 pl-6 border-l-2 ${formData.enable_questions ? 'border-blue-200' : 'border-gray-200'}`}>
+                {!formData.enable_questions && (
+                  <p className="text-xs text-amber-600 mb-3">
+                    Questions are currently hidden from the public page. Enable above to show them.
+                  </p>
+                )}
+                <QuestionsManager campaignId={campaign.id} initialQuestions={initialQuestions} />
+              </div>
             </div>
           </div>
 
@@ -469,16 +515,63 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Privacy & Rate Limits</h2>
 
             <div className="space-y-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.show_privacy_blurb}
+                  onChange={(e) => setFormData({ ...formData, show_privacy_blurb: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">Show privacy blurb section</span>
+              </label>
+
+              {formData.show_privacy_blurb && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Privacy Blurb
+                  </label>
+                  <RichTextEditor
+                    value={formData.privacy_blurb}
+                    onChange={(value) => setFormData({ ...formData, privacy_blurb: value })}
+                    rows={2}
+                  />
+                  {!formData.privacy_blurb && globalDefaults['default_privacy_blurb'] && (
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                      <p className="text-blue-800 font-medium">Using global default:</p>
+                      <p className="text-blue-700 mt-1 line-clamp-3">
+                        {globalDefaults['default_privacy_blurb']}
+                      </p>
+                      <a href="/admin/global-settings" className="text-blue-600 text-xs hover:underline mt-1 inline-block">
+                        Edit global defaults →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Privacy Blurb
+                  Consent Checkbox Text
                 </label>
-                <textarea
-                  value={formData.privacy_blurb}
-                  onChange={(e) => setFormData({ ...formData, privacy_blurb: e.target.value })}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                <RichTextEditor
+                  value={formData.consent_text}
+                  onChange={(value) => setFormData({ ...formData, consent_text: value })}
+                  rows={3}
                 />
+                <p className="text-xs text-gray-500 mt-1">
+                  Text shown next to the required consent checkbox at the bottom of the form
+                </p>
+                {!formData.consent_text && globalDefaults['default_consent_text'] && (
+                  <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                    <p className="text-blue-800 font-medium">Using global default:</p>
+                    <p className="text-blue-700 mt-1 line-clamp-3">
+                      {globalDefaults['default_consent_text']}
+                    </p>
+                    <a href="/admin/global-settings" className="text-blue-600 text-xs hover:underline mt-1 inline-block">
+                      Edit global defaults →
+                    </a>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-3 gap-4">
@@ -567,15 +660,13 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Contact Text
                     </label>
-                    <input
-                      type="text"
+                    <RichTextEditor
                       value={formData.contact_text}
-                      onChange={(e) => setFormData({ ...formData, contact_text: e.target.value })}
-                      placeholder="If you have any questions, please email"
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      onChange={(value) => setFormData({ ...formData, contact_text: value })}
+                      rows={2}
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      Preview: {formData.contact_text} <span className="text-blue-600">{formData.contact_email}</span>
+                      The email address will be appended as a link after this text
                     </p>
                   </div>
                 </>
@@ -619,20 +710,44 @@ export default function EditCampaignForm({ campaign, initialQuestions }: Props) 
           </div>
 
           {/* Actions */}
-          <div className="flex justify-end space-x-3 pt-4 border-t">
+          {/* Change Summary */}
+          <div className="pt-4 border-t">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Change Summary <span className="text-gray-500 text-xs">(Optional - for version history)</span>
+            </label>
+            <input
+              type="text"
+              value={changeSummary}
+              onChange={(e) => setChangeSummary(e.target.value)}
+              placeholder="e.g., Updated privacy blurb, changed capacity"
+              className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex justify-between items-center pt-4 border-t">
             <a
               href={`/admin/campaigns/${campaign.id}`}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50"
             >
               Cancel
             </a>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
+            <div className="flex space-x-3">
+              <button
+                type="button"
+                onClick={(e) => handleSubmit(e, true)}
+                disabled={loading || savingDraft}
+                className="px-4 py-2 border border-amber-500 text-amber-700 rounded hover:bg-amber-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingDraft ? 'Saving Draft...' : 'Save as Draft'}
+              </button>
+              <button
+                type="submit"
+                disabled={loading || savingDraft}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Publishing...' : 'Publish Changes'}
+              </button>
+            </div>
           </div>
         </form>
       </main>

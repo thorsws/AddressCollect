@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Question {
@@ -20,6 +20,22 @@ export default function CreateCampaign() {
   const [bannerType, setBannerType] = useState<'url' | 'upload'>('url');
   const [uploading, setUploading] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState('');
+
+  // Global defaults for showing preview
+  const [globalDefaults, setGlobalDefaults] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch('/api/admin/global-settings')
+      .then(res => res.json())
+      .then(data => {
+        const defaults: Record<string, string> = {};
+        data.settings?.forEach((s: { key: string; value: string }) => {
+          defaults[s.key] = s.value;
+        });
+        setGlobalDefaults(defaults);
+      })
+      .catch(() => {});
+  }, []);
 
   // Questions state
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -47,7 +63,8 @@ export default function CreateCampaign() {
     collect_title: false,
     enable_questions: false,
     questions_intro_text: '',
-    privacy_blurb: "Your information is used solely for this giveaway. We collect only what's needed to ship your book. Your data is stored securely, never sold or shared, and will be deleted within 60 days after books are shipped. We don't use cookies or tracking. Contact us anytime to request data deletion.",
+    privacy_blurb: '',
+    show_privacy_blurb: true,
     max_claims_per_email: 1,
     max_claims_per_ip_per_day: 5,
     test_mode: false,
@@ -196,19 +213,22 @@ export default function CreateCampaign() {
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold text-gray-900">Create Campaign</h1>
+          <div className="flex justify-between items-center py-3 sm:h-16 sm:py-0">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Create Campaign</h1>
             <a
               href="/admin"
-              className="text-sm text-blue-600 hover:text-blue-700"
+              className="flex items-center text-blue-600 hover:text-blue-700 bg-blue-50 sm:bg-transparent px-3 py-1.5 sm:px-0 sm:py-0 rounded-md"
             >
-              ← Back to Dashboard
+              <svg className="w-4 h-4 mr-1 sm:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-xs sm:text-sm font-medium sm:font-normal">Back</span>
             </a>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <form onSubmit={handleSubmit} className="bg-white shadow rounded-lg p-6 space-y-6">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
@@ -654,17 +674,40 @@ export default function CreateCampaign() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Privacy & Rate Limits</h2>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Privacy Blurb
-                </label>
-                <textarea
-                  value={formData.privacy_blurb}
-                  onChange={(e) => setFormData({ ...formData, privacy_blurb: e.target.value })}
-                  rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.show_privacy_blurb}
+                  onChange={(e) => setFormData({ ...formData, show_privacy_blurb: e.target.checked })}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-              </div>
+                <span className="ml-2 text-sm text-gray-700">Show privacy blurb section</span>
+              </label>
+
+              {formData.show_privacy_blurb && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Privacy Blurb
+                  </label>
+                  <textarea
+                    value={formData.privacy_blurb}
+                    onChange={(e) => setFormData({ ...formData, privacy_blurb: e.target.value })}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                  {!formData.privacy_blurb && globalDefaults['default_privacy_blurb'] && (
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
+                      <p className="text-blue-800 font-medium">Using global default:</p>
+                      <p className="text-blue-700 mt-1 line-clamp-3">
+                        {globalDefaults['default_privacy_blurb']}
+                      </p>
+                      <a href="/admin/global-settings" className="text-blue-600 text-xs hover:underline mt-1 inline-block">
+                        Edit global defaults →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>

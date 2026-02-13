@@ -1,6 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import RichContent from '@/components/RichContent';
+
+const DEFAULT_CONSENT_TEXT = 'I consent to providing my information for this campaign. I understand my data will be used solely for this purpose, stored securely, and deleted within 60 days. I can request deletion at any time by contacting the organizer.';
 
 interface Campaign {
   id: string;
@@ -18,6 +21,7 @@ interface Campaign {
   kiosk_mode: boolean;
   questions_intro_text: string | null;
   contact_email: string | null;
+  consent_text: string | null;
 }
 
 interface Question {
@@ -64,9 +68,10 @@ interface Props {
   campaign: Campaign;
   questions?: Question[];
   notYetStarted?: boolean;
+  globalDefaults?: Record<string, string>;
 }
 
-export default function CampaignForm({ campaign, questions = [], notYetStarted = false }: Props) {
+export default function CampaignForm({ campaign, questions = [], notYetStarted = false, globalDefaults = {} }: Props) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
   const [otherText, setOtherText] = useState<Record<string, string>>({});
@@ -517,9 +522,10 @@ export default function CampaignForm({ campaign, questions = [], notYetStarted =
             required
           />
           <span className="ml-3 text-base text-gray-700 leading-relaxed">
-            I consent to providing my information for <strong>{campaign.title}</strong>. I understand my data will be used solely for this purpose,
-            stored securely, and deleted within 60 days. I can request deletion at any time by contacting{' '}
-            {campaign.contact_email || 'the organizer'}.
+            <RichContent
+              content={campaign.consent_text || globalDefaults['default_consent_text'] || DEFAULT_CONSENT_TEXT}
+              className="inline"
+            />
             {' '}<span className="text-red-500">*</span>
           </span>
         </label>

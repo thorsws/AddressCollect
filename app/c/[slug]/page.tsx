@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import CampaignForm from './CampaignForm';
 import BannerPreview from './BannerPreview';
-import ReactMarkdown from 'react-markdown';
+import RichContent from '@/components/RichContent';
 import type { Metadata } from 'next';
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
@@ -62,17 +62,23 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-2xl w-full p-8">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{campaign.title}</h1>
+            <RichContent
+              content={campaign.title}
+              className="text-3xl font-bold text-gray-900 mb-4"
+            />
             <p className="text-gray-600">
               This campaign has ended. Thank you for your interest.
             </p>
             {campaign.contact_email && (
-              <p className="text-gray-600 text-sm mt-4">
-                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+              <div className="text-gray-600 text-sm mt-4">
+                <RichContent
+                  content={campaign.contact_text || 'If you have any questions, please email'}
+                  className="inline"
+                />{' '}
                 <a href={`mailto:${campaign.contact_email}`} className="text-blue-600 hover:text-blue-700 underline">
                   {campaign.contact_email}
                 </a>
-              </p>
+              </div>
             )}
           </div>
         </div>
@@ -106,6 +112,17 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
     .eq('campaign_id', campaign.id)
     .order('display_order', { ascending: true });
 
+  // Fetch global settings for defaults
+  const { data: globalSettings } = await supabaseAdmin
+    .from('global_settings')
+    .select('key, value')
+    .in('key', ['default_consent_text', 'default_privacy_blurb']);
+
+  const globalDefaults: Record<string, string> = {};
+  globalSettings?.forEach(s => {
+    globalDefaults[s.key] = s.value;
+  });
+
   // Check if capacity is full (only if capacity is set)
   const isFull = campaign.capacity_total && claimCount >= campaign.capacity_total;
 
@@ -114,7 +131,10 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="max-w-2xl w-full p-8">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{campaign.title}</h1>
+            <RichContent
+              content={campaign.title}
+              className="text-3xl font-bold text-gray-900 mb-4"
+            />
             <p className="text-gray-600 text-lg mb-2">
               All slots have been claimed!
             </p>
@@ -122,15 +142,18 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               Thank you for your interest. Unfortunately, we&apos;ve reached our capacity for this campaign.
             </p>
             {campaign.contact_email && (
-              <p className="text-gray-600 text-sm mt-4">
-                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+              <div className="text-gray-600 text-sm mt-4">
+                <RichContent
+                  content={campaign.contact_text || 'If you have any questions, please email'}
+                  className="inline"
+                />{' '}
                 <a
                   href={`mailto:${campaign.contact_email}`}
                   className="text-blue-600 hover:text-blue-700 underline"
                 >
                   {campaign.contact_email}
                 </a>
-              </p>
+              </div>
             )}
           </div>
         </div>
@@ -148,11 +171,15 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             </div>
           )}
           <div className="mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">{campaign.title}</h1>
+            <RichContent
+              content={campaign.title}
+              className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6"
+            />
             {campaign.description && (
-              <div className="text-gray-700 mb-6 prose prose-base sm:prose-lg max-w-none">
-                <ReactMarkdown>{campaign.description}</ReactMarkdown>
-              </div>
+              <RichContent
+                content={campaign.description}
+                className="text-gray-700 mb-6 prose prose-base sm:prose-lg max-w-none"
+              />
             )}
 
             {submissionsDisabled && (
@@ -207,28 +234,33 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
               <BannerPreview url={campaign.banner_url} />
             )}
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-5">
-              <h3 className="text-green-900 font-bold text-lg mb-2">Privacy Promise</h3>
-              <p className="text-green-800 text-base font-medium">
-                {campaign.privacy_blurb ||
-                  "We only use your address to ship the book. We won't sell your information."}
-              </p>
-            </div>
+            {campaign.show_privacy_blurb !== false && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-5">
+                <h3 className="text-green-900 font-bold text-lg mb-2">Privacy Promise</h3>
+                <RichContent
+                  content={campaign.privacy_blurb || "We only use your address to ship the book. We won't sell your information."}
+                  className="text-green-800 text-base font-medium"
+                />
+              </div>
+            )}
 
             {campaign.contact_email && (
-              <p className="text-gray-700 text-base mt-4">
-                {campaign.contact_text || 'If you have any questions, please email'}{' '}
+              <div className="text-gray-700 text-base mt-4">
+                <RichContent
+                  content={campaign.contact_text || 'If you have any questions, please email'}
+                  className="inline"
+                />{' '}
                 <a
                   href={`mailto:${campaign.contact_email}`}
                   className="text-blue-600 hover:text-blue-700 underline font-medium"
                 >
                   {campaign.contact_email}
                 </a>
-              </p>
+              </div>
             )}
           </div>
 
-          <CampaignForm campaign={campaign} questions={questions || []} notYetStarted={submissionsDisabled} />
+          <CampaignForm campaign={campaign} questions={questions || []} notYetStarted={submissionsDisabled} globalDefaults={globalDefaults} />
         </div>
       </div>
     </div>

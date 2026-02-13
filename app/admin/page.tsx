@@ -65,18 +65,26 @@ export default async function AdminDashboard() {
                 {admin.name} ({admin.role === 'super_admin' ? 'Super Admin' : admin.role === 'admin' ? 'Admin' : 'Viewer'})
               </span>
               {canManageUsers(admin.role) && (
-                <Link
-                  href="/admin/users"
-                  className="text-sm text-purple-600 hover:text-purple-700 font-semibold"
-                >
-                  Manage Users
-                </Link>
+                <>
+                  <Link
+                    href="/admin/users"
+                    className="text-sm text-purple-600 hover:text-purple-700 font-semibold"
+                  >
+                    Manage Users
+                  </Link>
+                  <Link
+                    href="/admin/global-settings"
+                    className="text-sm text-purple-600 hover:text-purple-700 font-semibold"
+                  >
+                    Global Settings
+                  </Link>
+                </>
               )}
               <Link
                 href="/admin/settings"
                 className="text-sm text-gray-700 hover:text-gray-900 font-medium"
               >
-                Settings
+                Profile
               </Link>
               <Link
                 href="/admin/help"

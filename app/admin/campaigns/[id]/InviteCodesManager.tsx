@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface InviteCode {
   id: string;
@@ -23,6 +24,7 @@ export default function InviteCodesManager({ campaignId, inviteCodes: initialCod
   const [maxUses, setMaxUses] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; codeId: string }>({ isOpen: false, codeId: '' });
 
   const handleAddCode = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,8 +76,13 @@ export default function InviteCodesManager({ campaignId, inviteCodes: initialCod
     }
   };
 
-  const handleDelete = async (codeId: string) => {
-    if (!confirm('Delete this invite code?')) return;
+  const handleDelete = (codeId: string) => {
+    setDeleteConfirm({ isOpen: true, codeId });
+  };
+
+  const confirmDeleteCode = async () => {
+    const codeId = deleteConfirm.codeId;
+    setDeleteConfirm({ isOpen: false, codeId: '' });
 
     try {
       const response = await fetch(`/api/admin/campaigns/${campaignId}/invite-codes/${codeId}`, {
@@ -151,6 +158,16 @@ export default function InviteCodesManager({ campaignId, inviteCodes: initialCod
           </div>
         </form>
       )}
+
+      <ConfirmDialog
+        isOpen={deleteConfirm.isOpen}
+        title="Delete Invite Code"
+        message="Are you sure you want to delete this invite code? This action cannot be undone."
+        confirmText="Delete"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        onConfirm={confirmDeleteCode}
+        onCancel={() => setDeleteConfirm({ isOpen: false, codeId: '' })}
+      />
 
       {inviteCodes.length === 0 ? (
         <p className="text-center text-gray-500 py-8">

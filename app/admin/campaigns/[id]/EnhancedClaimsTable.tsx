@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, Fragment } from 'react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Claim {
   id: string;
@@ -43,6 +44,8 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
   }}>({});
   const [deleting, setDeleting] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [statusConfirm, setStatusConfirm] = useState<{ isOpen: boolean; claimId: string; newStatus: string; message: string }>({ isOpen: false, claimId: '', newStatus: '', message: '' });
+  const [deleteClaimConfirm, setDeleteClaimConfirm] = useState<{ isOpen: boolean; claimId: string; claimName: string }>({ isOpen: false, claimId: '', claimName: '' });
 
   const isSuperAdmin = userRole === 'super_admin';
 
@@ -92,12 +95,17 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
     }
   };
 
-  const changeStatus = async (claimId: string, newStatus: string) => {
-    const confirmMsg = newStatus === 'rejected'
+  const changeStatus = (claimId: string, newStatus: string) => {
+    const message = newStatus === 'rejected'
       ? 'Reject this claim? It won\'t count toward capacity.'
       : `Change status to "${newStatus}"?`;
 
-    if (!confirm(confirmMsg)) return;
+    setStatusConfirm({ isOpen: true, claimId, newStatus, message });
+  };
+
+  const confirmStatusChange = async () => {
+    const { claimId, newStatus } = statusConfirm;
+    setStatusConfirm({ isOpen: false, claimId: '', newStatus: '', message: '' });
 
     try {
       const response = await fetch(`/api/admin/claims/${claimId}`, {
@@ -114,10 +122,13 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
     }
   };
 
-  const deleteClaim = async (claimId: string, claimName: string) => {
-    if (!confirm(`Are you sure you want to permanently delete this claim for "${claimName}"? This cannot be undone.`)) {
-      return;
-    }
+  const deleteClaim = (claimId: string, claimName: string) => {
+    setDeleteClaimConfirm({ isOpen: true, claimId, claimName });
+  };
+
+  const confirmDeleteClaim = async () => {
+    const { claimId } = deleteClaimConfirm;
+    setDeleteClaimConfirm({ isOpen: false, claimId: '', claimName: '' });
 
     setDeleting(claimId);
     try {
@@ -182,6 +193,26 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
 
   return (
     <>
+      <ConfirmDialog
+        isOpen={statusConfirm.isOpen}
+        title="Change Claim Status"
+        message={statusConfirm.message}
+        confirmText="Confirm"
+        confirmButtonClass={statusConfirm.newStatus === 'rejected' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}
+        onConfirm={confirmStatusChange}
+        onCancel={() => setStatusConfirm({ isOpen: false, claimId: '', newStatus: '', message: '' })}
+      />
+
+      <ConfirmDialog
+        isOpen={deleteClaimConfirm.isOpen}
+        title="Delete Claim"
+        message={`Are you sure you want to permanently delete this claim for "${deleteClaimConfirm.claimName}"? This cannot be undone.`}
+        confirmText="Delete"
+        confirmButtonClass="bg-red-600 hover:bg-red-700"
+        onConfirm={confirmDeleteClaim}
+        onCancel={() => setDeleteClaimConfirm({ isOpen: false, claimId: '', claimName: '' })}
+      />
+
       {/* Stats */}
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">

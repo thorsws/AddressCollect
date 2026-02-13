@@ -36,7 +36,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
   // Fetch admin profile
   const { data: admin } = await supabaseAdmin
     .from('admin_users')
-    .select('id, email, name, display_name, linkedin_url, bio, phone, role')
+    .select('id, email, name, display_name, linkedin_url, bio, phone, role, default_message')
     .eq('id', session.user_id)
     .single();
 
@@ -135,6 +135,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
             linkedinUrl: admin.linkedin_url,
             phone: admin.phone,
             bio: admin.bio,
+            defaultMessage: admin.default_message,
           }}
         />
       </div>

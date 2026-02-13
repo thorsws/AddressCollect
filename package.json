@@ -18,6 +18,10 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.48.1",
     "@tailwindcss/typography": "^0.5.19",
+    "@tiptap/extension-link": "^3.19.0",
+    "@tiptap/pm": "^3.19.0",
+    "@tiptap/react": "^3.19.0",
+    "@tiptap/starter-kit": "^3.19.0",
     "@types/qrcode": "^1.5.6",
     "dotenv": "^17.2.3",
     "form-data": "^4.0.5",
