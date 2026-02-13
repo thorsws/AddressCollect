@@ -28,6 +28,19 @@ export default async function EditCampaign({ params }: { params: Promise<{ id: s
     redirect('/admin');
   }
 
+  // Check if there's a draft version - if so, use the draft data
+  const { data: draftVersion } = await supabaseAdmin
+    .from('campaign_versions')
+    .select('*')
+    .eq('campaign_id', id)
+    .eq('status', 'draft')
+    .single();
+
+  // If there's a draft, merge the draft data into the campaign object
+  const campaignData = draftVersion
+    ? { ...campaign, ...draftVersion.data }
+    : campaign;
+
   // Fetch questions for this campaign
   const { data: questions } = await supabaseAdmin
     .from('campaign_questions')
@@ -45,5 +58,5 @@ export default async function EditCampaign({ params }: { params: Promise<{ id: s
     globalDefaults[s.key] = s.value;
   });
 
-  return <EditCampaignForm campaign={campaign} initialQuestions={questions || []} globalDefaults={globalDefaults} />;
+  return <EditCampaignForm campaign={campaignData} initialQuestions={questions || []} globalDefaults={globalDefaults} />;
 }
