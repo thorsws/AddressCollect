@@ -68,8 +68,8 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 ${
-            editor.isActive('bold') ? 'bg-gray-300 font-bold' : ''
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-700 ${
+            editor.isActive('bold') ? 'bg-gray-300 font-bold text-gray-900' : ''
           }`}
           title="Bold"
         >
@@ -78,8 +78,8 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 italic ${
-            editor.isActive('italic') ? 'bg-gray-300' : ''
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 italic text-gray-700 ${
+            editor.isActive('italic') ? 'bg-gray-300 text-gray-900' : ''
           }`}
           title="Italic"
         >
@@ -88,8 +88,8 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 line-through ${
-            editor.isActive('strike') ? 'bg-gray-300' : ''
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 line-through text-gray-700 ${
+            editor.isActive('strike') ? 'bg-gray-300 text-gray-900' : ''
           }`}
           title="Strikethrough"
         >
@@ -99,8 +99,8 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 font-bold ${
-            editor.isActive('heading', { level: 2 }) ? 'bg-gray-300' : ''
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 font-bold text-gray-700 ${
+            editor.isActive('heading', { level: 2 }) ? 'bg-gray-300 text-gray-900' : ''
           }`}
           title="Heading 2"
         >
@@ -109,8 +109,8 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 font-semibold ${
-            editor.isActive('heading', { level: 3 }) ? 'bg-gray-300' : ''
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 font-semibold text-gray-700 ${
+            editor.isActive('heading', { level: 3 }) ? 'bg-gray-300 text-gray-900' : ''
           }`}
           title="Heading 3"
         >
@@ -120,8 +120,8 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 ${
-            editor.isActive('bulletList') ? 'bg-gray-300' : ''
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-700 ${
+            editor.isActive('bulletList') ? 'bg-gray-300 text-gray-900' : ''
           }`}
           title="Bullet List"
         >
@@ -130,8 +130,8 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 ${
-            editor.isActive('orderedList') ? 'bg-gray-300' : ''
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-700 ${
+            editor.isActive('orderedList') ? 'bg-gray-300 text-gray-900' : ''
           }`}
           title="Numbered List"
         >
@@ -141,7 +141,7 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
         <button
           type="button"
           onClick={addLink}
-          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 ${
+          className={`px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-700 ${
             editor.isActive('link') ? 'bg-gray-300 text-blue-600' : ''
           }`}
           title="Add Link"
