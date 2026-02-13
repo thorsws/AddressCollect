@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { canEditCampaign } from '@/lib/admin/permissions';
 import EditCampaignForm from './EditCampaignForm';
 
 export default async function EditCampaign({ params }: { params: Promise<{ id: string }> }) {
@@ -23,8 +22,21 @@ export default async function EditCampaign({ params }: { params: Promise<{ id: s
     redirect('/admin');
   }
 
-  // Check if user has permission to edit this campaign
-  if (!canEditCampaign(admin.role, campaign.created_by, admin.id)) {
+  // Check if user is a campaign member with edit access
+  const { data: membership } = await supabaseAdmin
+    .from('campaign_members')
+    .select('role')
+    .eq('campaign_id', id)
+    .eq('user_id', admin.id)
+    .single();
+
+  const memberRole = membership?.role;
+  const canEdit = admin.role === 'super_admin' ||
+                  campaign.created_by === admin.id ||
+                  memberRole === 'owner' ||
+                  memberRole === 'editor';
+
+  if (!canEdit) {
     redirect('/admin');
   }
 
