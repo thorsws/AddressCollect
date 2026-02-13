@@ -133,7 +133,9 @@ function LoginForm() {
                 id="otp"
                 name="otp"
                 type="text"
-                autoComplete="off"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
                 required
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
