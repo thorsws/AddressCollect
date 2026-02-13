@@ -31,7 +31,7 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
     immediatelyRender: false, // Fix SSR hydration mismatch
     editorProps: {
       attributes: {
-        class: `prose prose-sm max-w-none focus:outline-none min-h-[${rows * 24}px] p-3`,
+        class: `prose prose-sm max-w-none focus:outline-none min-h-[${rows * 24}px] p-3 text-gray-900`,
       },
     },
     onUpdate: ({ editor }) => {

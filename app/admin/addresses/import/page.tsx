@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { stripHtml } from '@/lib/utils/stripHtml';
 
 interface Campaign {
   id: string;
@@ -162,7 +163,7 @@ export default function ImportAddressesPage() {
                 <option value="">Select a campaign...</option>
                 {campaigns.map((campaign) => (
                   <option key={campaign.id} value={campaign.slug}>
-                    {campaign.title} ({campaign.slug})
+                    {stripHtml(campaign.title)} ({campaign.slug})
                   </option>
                 ))}
               </select>

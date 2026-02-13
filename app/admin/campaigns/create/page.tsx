@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), {
+  ssr: false,
+  loading: () => <div className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-500 animate-pulse min-h-[80px]">Loading editor...</div>
+});
 
 interface Question {
   id: string;
@@ -262,13 +268,11 @@ export default function CreateCampaign() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Public Campaign Title * <span className="text-gray-500 text-xs">(Shown to users)</span>
                 </label>
-                <input
-                  type="text"
-                  required
+                <RichTextEditor
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData({ ...formData, title: value })}
                   placeholder="Stanford Book Giveaway"
+                  rows={2}
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   This title is shown on the public campaign page
@@ -296,11 +300,10 @@ export default function CreateCampaign() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Description
                 </label>
-                <textarea
+                <RichTextEditor
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(value) => setFormData({ ...formData, description: value })}
+                  rows={4}
                   placeholder="Get your free copy of our book! We'll ship it directly to you."
                 />
               </div>
@@ -689,11 +692,10 @@ export default function CreateCampaign() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Privacy Blurb
                   </label>
-                  <textarea
+                  <RichTextEditor
                     value={formData.privacy_blurb}
-                    onChange={(e) => setFormData({ ...formData, privacy_blurb: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, privacy_blurb: value })}
                     rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   />
                   {!formData.privacy_blurb && globalDefaults['default_privacy_blurb'] && (
                     <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded text-sm">
@@ -765,15 +767,14 @@ export default function CreateCampaign() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Contact Text
                   </label>
-                  <input
-                    type="text"
+                  <RichTextEditor
                     value={formData.contact_text}
-                    onChange={(e) => setFormData({ ...formData, contact_text: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, contact_text: value })}
                     placeholder="If you have any questions, please email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    rows={2}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Preview: {formData.contact_text} <a className="text-blue-600">{formData.contact_email}</a>
+                    The email address will be appended as a link after this text
                   </p>
                 </div>
               )}

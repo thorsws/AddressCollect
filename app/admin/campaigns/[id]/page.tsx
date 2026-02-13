@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { stripHtml } from '@/lib/utils/stripHtml';
 import EnhancedClaimsTable from './EnhancedClaimsTable';
 import InviteCodesManager from './InviteCodesManager';
 import PreCreateClaimForm from './PreCreateClaimForm';
@@ -100,7 +101,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                 rel="noopener noreferrer"
                 className="text-sm text-blue-600 hover:text-blue-700 mt-1 inline-block"
               >
-                Public: {campaign.title}
+                Public: {stripHtml(campaign.title)}
               </a>
             </div>
 
@@ -135,7 +136,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                 Export CSV
               </a>
               {admin.role === 'super_admin' && (
-                <DeleteCampaignButton campaignId={campaign.id} campaignTitle={campaign.title} />
+                <DeleteCampaignButton campaignId={campaign.id} campaignTitle={stripHtml(campaign.title)} />
               )}
             </div>
           </div>
@@ -214,7 +215,7 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
 
         {/* QR Code Section */}
         <div className="mb-4 sm:mb-6">
-          <CampaignQRCode campaignSlug={campaign.slug} campaignTitle={campaign.title} />
+          <CampaignQRCode campaignSlug={campaign.slug} campaignTitle={stripHtml(campaign.title)} />
         </div>
 
         {/* Pre-create claim form - allows admin to create invite links */}

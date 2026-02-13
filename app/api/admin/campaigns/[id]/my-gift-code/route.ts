@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
+import { stripHtml } from '@/lib/utils/stripHtml';
 import crypto from 'crypto';
 
 // Generate a short, URL-safe code
@@ -22,7 +23,7 @@ export async function GET(
     // Check if campaign exists
     const { data: campaign, error: campaignError } = await supabaseAdmin
       .from('campaigns')
-      .select('id, slug, title')
+      .select('id, slug, title, internal_title')
       .eq('id', campaignId)
       .single();
 
@@ -53,7 +54,7 @@ export async function GET(
     return NextResponse.json({
       codes: codes || [],
       campaignSlug: campaign.slug,
-      campaignTitle: campaign.title,
+      campaignTitle: campaign.internal_title || stripHtml(campaign.title),
       profile: {
         displayName: adminProfile?.display_name || adminProfile?.name || admin.name,
         email: adminProfile?.email,

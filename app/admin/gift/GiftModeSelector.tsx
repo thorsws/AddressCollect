@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { stripHtml } from '@/lib/utils/stripHtml';
 
 interface Campaign {
   id: string;
@@ -93,7 +94,7 @@ export default function GiftModeSelector({ campaigns, gifterName, hasProfile }: 
                 <option value="">Choose a campaign...</option>
                 {campaigns.map((campaign) => (
                   <option key={campaign.id} value={campaign.id}>
-                    {campaign.internal_title || campaign.title}
+                    {campaign.internal_title || stripHtml(campaign.title)}
                   </option>
                 ))}
               </select>

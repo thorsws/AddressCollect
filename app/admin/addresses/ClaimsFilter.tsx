@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { stripHtml } from '@/lib/utils/stripHtml';
 
 interface Claim {
   id: string;
@@ -219,7 +220,7 @@ export default function ClaimsFilter({ claims: initialClaims, userRole }: Props)
     const rows = filteredClaims.map(claim => {
       const isPreCreated = claim.claim_token && !claim.address1;
       return [
-        claim.campaigns?.title || '', claim.status, claim.first_name, claim.last_name,
+        stripHtml(claim.campaigns?.title) || '', claim.status, claim.first_name, claim.last_name,
         claim.email || '', claim.company || '', claim.title || '', claim.phone || '',
         claim.address1 || '', claim.address2 || '', claim.city || '', claim.region || '',
         claim.postal_code || '', claim.country || '',
@@ -517,7 +518,7 @@ export default function ClaimsFilter({ claims: initialClaims, userRole }: Props)
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm">
                     <div>
-                      <div className="font-medium text-gray-900">{claim.campaigns?.title}</div>
+                      <div className="font-medium text-gray-900">{stripHtml(claim.campaigns?.title)}</div>
                       <div className="text-gray-500 text-xs">/{claim.campaigns?.slug}</div>
                     </div>
                   </td>

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase/server';
 import { hashValue } from '@/lib/crypto/hash';
+import { stripHtml } from '@/lib/utils/stripHtml';
 import GiftGenerator from './GiftGenerator';
 import Link from 'next/link';
 
@@ -109,7 +110,7 @@ export default async function GiftPage({ params }: GiftPageProps) {
           Gift a Book
         </h1>
         <p className="text-gray-600 text-sm mb-4">
-          {campaign.internal_title || campaign.title}
+          {campaign.internal_title || stripHtml(campaign.title)}
         </p>
 
         {/* Profile Setup Warning */}

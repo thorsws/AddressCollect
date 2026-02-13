@@ -6,7 +6,10 @@ import dynamic from 'next/dynamic';
 import { utcToEastern, easternToUtc } from '@/lib/utils/timezone';
 
 const QuestionsManager = dynamic(() => import('../QuestionsManager'), { ssr: false });
-const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { ssr: false });
+const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), {
+  ssr: false,
+  loading: () => <div className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50 text-gray-500 animate-pulse min-h-[80px]">Loading editor...</div>
+});
 
 interface Campaign {
   id: string;
@@ -538,12 +541,11 @@ export default function EditCampaignForm({ campaign, initialQuestions, globalDef
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Questions Section Intro Text (optional)
                     </label>
-                    <input
-                      type="text"
+                    <RichTextEditor
                       value={formData.questions_intro_text}
-                      onChange={(e) => setFormData({ ...formData, questions_intro_text: e.target.value })}
+                      onChange={(value) => setFormData({ ...formData, questions_intro_text: value })}
                       placeholder="Please help us learn more about your use of AI"
-                      className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-blue-500"
+                      rows={2}
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       This text will appear above your questions to provide context to users
