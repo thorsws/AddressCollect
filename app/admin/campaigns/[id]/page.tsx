@@ -114,6 +114,14 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
               >
                 Gift a Book
               </a>
+              {canEdit && (
+                <a
+                  href={`/admin/campaigns/${campaign.id}/register`}
+                  className="px-3 py-2 bg-teal-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-teal-700 text-center"
+                >
+                  Register
+                </a>
+              )}
               <a
                 href={`/admin/campaigns/${campaign.id}/my-qr`}
                 className="px-3 py-2 bg-indigo-600 text-white text-xs sm:text-sm font-medium rounded hover:bg-indigo-700 text-center"
