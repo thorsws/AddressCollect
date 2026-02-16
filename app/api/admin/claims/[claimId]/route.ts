@@ -63,10 +63,10 @@ export async function DELETE(
   const { claimId } = await params;
 
   try {
-    // First fetch the claim to check if it's pre-created
+    // Fetch the claim with campaign info
     const { data: claim, error: fetchError } = await supabaseAdmin
       .from('claims')
-      .select('id, address1, claim_token')
+      .select('id, address1, claim_token, campaign_id')
       .eq('id', claimId)
       .single();
 
@@ -74,13 +74,35 @@ export async function DELETE(
       return NextResponse.json({ error: 'Claim not found' }, { status: 404 });
     }
 
-    // Check permissions: super_admin can delete any, others can only delete pre-created (no address)
+    // Check permissions: super_admin can delete any.
+    // Campaign owners/editors can delete claims in their campaigns.
+    // Others can only delete pre-created (no address).
     const isPreCreated = claim.claim_token && !claim.address1;
     if (admin.role !== 'super_admin' && !isPreCreated) {
-      return NextResponse.json(
-        { error: 'Only super admins can delete submitted claims' },
-        { status: 403 }
-      );
+      // Check if admin has edit access to this campaign
+      const { data: campaign } = await supabaseAdmin
+        .from('campaigns')
+        .select('created_by')
+        .eq('id', claim.campaign_id)
+        .single();
+
+      const { data: membership } = await supabaseAdmin
+        .from('campaign_members')
+        .select('role')
+        .eq('campaign_id', claim.campaign_id)
+        .eq('user_id', admin.id)
+        .single();
+
+      const canEdit = campaign?.created_by === admin.id ||
+                      membership?.role === 'owner' ||
+                      membership?.role === 'editor';
+
+      if (!canEdit) {
+        return NextResponse.json(
+          { error: 'You do not have permission to delete claims in this campaign' },
+          { status: 403 }
+        );
+      }
     }
 
     // First delete any email verifications for this claim
