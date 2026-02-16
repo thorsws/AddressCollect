@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import RichContent from '@/components/RichContent';
 import BannerPreview from '../../BannerPreview';
 import TokenClaimForm from './TokenClaimForm';
 
@@ -157,7 +158,7 @@ export default function TokenClaimFormWrapper({ campaign, prefilledData, claimTo
         </div>
       )}
 
-      <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6">{pageContent.title}</h1>
+      <RichContent content={pageContent.title} className="campaign-title font-bold text-gray-900 mb-4 sm:mb-6" />
       {pageContent.description && (
         <div className="text-gray-700 mb-6 prose prose-base sm:prose-lg max-w-none">
           <ReactMarkdown>{pageContent.description}</ReactMarkdown>

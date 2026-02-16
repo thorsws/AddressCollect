@@ -254,7 +254,7 @@ export default function StaticGiftClaimForm({ campaign, gifterInfo, customMessag
       <div className="mb-8">
         <RichContent
           content={campaign.title}
-          className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6"
+          className="campaign-title font-bold text-gray-900 mb-4 sm:mb-6"
         />
         {campaign.description && (
           <RichContent

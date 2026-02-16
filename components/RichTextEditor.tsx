@@ -128,11 +128,10 @@ export default function RichTextEditor({ value, onChange, placeholder, rows = 3 
   };
 
   const setFontSize = (size: string) => {
-    editor.chain().focus().run();
     if (size === '') {
-      (editor.commands as any).unsetFontSize();
+      editor.chain().focus().unsetMark('textStyle').run();
     } else {
-      (editor.commands as any).setFontSize(size);
+      editor.chain().focus().setMark('textStyle', { fontSize: size }).run();
     }
     setShowSizeMenu(false);
   };
