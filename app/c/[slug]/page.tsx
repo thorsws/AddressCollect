@@ -64,7 +64,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <RichContent
               content={campaign.title}
-              className="text-3xl font-bold text-gray-900 mb-4"
+              className="campaign-title font-bold text-gray-900 mb-4"
             />
             <p className="text-gray-600">
               This campaign has ended. Thank you for your interest.
@@ -133,7 +133,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <RichContent
               content={campaign.title}
-              className="text-3xl font-bold text-gray-900 mb-4"
+              className="campaign-title font-bold text-gray-900 mb-4"
             />
             <p className="text-gray-600 text-lg mb-2">
               All slots have been claimed!
@@ -198,7 +198,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
           <div className="mb-8">
             <RichContent
               content={campaign.title}
-              className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 sm:mb-6"
+              className="campaign-title font-bold text-gray-900 mb-4 sm:mb-6"
             />
             {campaign.description && (
               <RichContent

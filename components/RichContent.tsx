@@ -8,6 +8,7 @@ interface Props {
 /**
  * Renders HTML content from the rich text editor.
  * Falls back to plain text if content doesn't look like HTML.
+ * Supports inline styles (font-size, etc.) and preserves line breaks.
  */
 export default function RichContent({ content, className = '' }: Props) {
   if (!content) return null;
@@ -18,7 +19,7 @@ export default function RichContent({ content, className = '' }: Props) {
   if (isHtml) {
     return (
       <div
-        className={className}
+        className={`rich-content ${className}`}
         dangerouslySetInnerHTML={{ __html: content }}
       />
     );
@@ -32,7 +33,7 @@ export default function RichContent({ content, className = '' }: Props) {
 
   return (
     <div
-      className={className}
+      className={`rich-content ${className}`}
       dangerouslySetInnerHTML={{ __html: processed }}
     />
   );
