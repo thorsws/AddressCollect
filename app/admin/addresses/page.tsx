@@ -69,7 +69,7 @@ export default async function AllAddressesPage() {
               <p className="text-2xl font-bold text-gray-900">{totalClaims}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600">Confirmed</p>
+              <p className="text-sm text-gray-600">Email Verified</p>
               <p className="text-2xl font-bold text-green-600">{confirmedClaims}</p>
             </div>
             <div>

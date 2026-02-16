@@ -278,7 +278,7 @@ export default function ClaimsFilter({ claims: initialClaims, userRole }: Props)
             className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500"
           >
             <option value="all">All</option>
-            <option value="confirmed">Confirmed</option>
+            <option value="confirmed">Email Verified</option>
             <option value="pending">Pending</option>
             <option value="rejected">Rejected</option>
           </select>
@@ -480,7 +480,7 @@ export default function ClaimsFilter({ claims: initialClaims, userRole }: Props)
                             : 'bg-gray-100 text-gray-800'
                         }`}
                       >
-                        {claim.status}
+                        {claim.status === 'confirmed' ? 'email verified' : claim.status}
                       </span>
                       {claim.is_test_claim && (
                         <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-800 inline-block w-fit">

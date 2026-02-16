@@ -361,6 +361,13 @@ export default function CampaignsFilter({ campaigns: initialCampaigns, currentUs
                 View/Edit
               </a>
               <a
+                href={`/admin/campaigns/${campaign.id}/register`}
+                className="flex-1 sm:flex-none text-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded hover:bg-green-700"
+                title="Register someone manually"
+              >
+                Register
+              </a>
+              <a
                 href={`/admin/campaigns/${campaign.id}/gift`}
                 className="flex-1 sm:flex-none text-center px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700"
                 title="Gift a book"
