@@ -1,63 +1,59 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { requireAdmin } from '@/lib/admin/requireAdmin';
 import { supabaseAdmin } from '@/lib/supabase/server';
-import { hashValue } from '@/lib/crypto/hash';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
 export async function POST(request: Request, { params }: RouteParams) {
-  try {
-    const { id: campaignId } = await params;
+  const admin = await requireAdmin();
+  if (admin instanceof NextResponse) return admin;
 
-    // Verify admin session
-    const cookieStore = await cookies();
-    const sessionToken = cookieStore.get('admin_session')?.value;
+  const { id: campaignId } = await params;
 
-    if (!sessionToken) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // Check if campaign exists
+  const { data: campaign, error: fetchError } = await supabaseAdmin
+    .from('campaigns')
+    .select('id')
+    .eq('id', campaignId)
+    .single();
+
+  if (fetchError || !campaign) {
+    return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+  }
+
+  // Check if already favorited by this user
+  const { data: existing } = await supabaseAdmin
+    .from('campaign_favorites')
+    .select('id')
+    .eq('user_id', admin.id)
+    .eq('campaign_id', campaignId)
+    .single();
+
+  if (existing) {
+    // Remove favorite
+    const { error: deleteError } = await supabaseAdmin
+      .from('campaign_favorites')
+      .delete()
+      .eq('user_id', admin.id)
+      .eq('campaign_id', campaignId);
+
+    if (deleteError) {
+      return NextResponse.json({ error: 'Failed to remove favorite' }, { status: 500 });
     }
 
-    const sessionTokenHash = hashValue(sessionToken);
-    const { data: session } = await supabaseAdmin
-      .from('admin_sessions')
-      .select('user_id')
-      .eq('session_token_hash', sessionTokenHash)
-      .gt('expires_at', new Date().toISOString())
-      .single();
+    return NextResponse.json({ is_favorited: false });
+  } else {
+    // Add favorite
+    const { error: insertError } = await supabaseAdmin
+      .from('campaign_favorites')
+      .insert({ user_id: admin.id, campaign_id: campaignId });
 
-    if (!session?.user_id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (insertError) {
+      return NextResponse.json({ error: 'Failed to add favorite' }, { status: 500 });
     }
 
-    // Get current favorite status
-    const { data: campaign, error: fetchError } = await supabaseAdmin
-      .from('campaigns')
-      .select('is_favorited')
-      .eq('id', campaignId)
-      .single();
-
-    if (fetchError || !campaign) {
-      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
-    }
-
-    // Toggle favorite status
-    const newFavorited = !campaign.is_favorited;
-
-    const { error: updateError } = await supabaseAdmin
-      .from('campaigns')
-      .update({ is_favorited: newFavorited })
-      .eq('id', campaignId);
-
-    if (updateError) {
-      console.error('Error updating favorite status:', updateError);
-      return NextResponse.json({ error: 'Failed to update favorite status' }, { status: 500 });
-    }
-
-    return NextResponse.json({ is_favorited: newFavorited });
-  } catch (error: any) {
-    console.error('Error in favorite toggle API:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ is_favorited: true });
   }
 }

@@ -46,14 +46,14 @@ export default function ClaimsTable({ claims, capacity_total }: ClaimsTableProps
             <p className="text-sm text-gray-600">Real Claims</p>
             <p className="text-2xl font-bold text-gray-900">{realClaims.length}</p>
             <p className="text-xs text-gray-500 mt-1">
-              {confirmedRealClaims.length} confirmed, {pendingRealClaims.length} pending
+              {confirmedRealClaims.length} verified, {pendingRealClaims.length} pending
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Test Claims</p>
             <p className="text-2xl font-bold text-purple-600">{testClaims.length}</p>
             <p className="text-xs text-gray-500 mt-1">
-              {confirmedTestClaims.length} confirmed, {pendingTestClaims.length} pending
+              {confirmedTestClaims.length} verified, {pendingTestClaims.length} pending
             </p>
           </div>
           <div>
@@ -61,7 +61,7 @@ export default function ClaimsTable({ claims, capacity_total }: ClaimsTableProps
             <p className="text-2xl font-bold text-gray-900">{claims.length}</p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Confirmed (Real)</p>
+            <p className="text-sm text-gray-600">Verified Email (Real)</p>
             <p className="text-2xl font-bold text-green-600">{confirmedRealClaims.length}</p>
           </div>
           <div>
@@ -147,7 +147,7 @@ export default function ClaimsTable({ claims, capacity_total }: ClaimsTableProps
                               : 'bg-gray-100 text-gray-800'
                           }`}
                         >
-                          {claim.status}
+                          {claim.status === 'confirmed' ? 'verified email' : claim.status}
                         </span>
                         {claim.is_test_claim && (
                           <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-800">

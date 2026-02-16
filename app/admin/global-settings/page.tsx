@@ -51,7 +51,7 @@ export default function GlobalSettingsPage() {
   const updateSetting = (key: string, value: string) => {
     setSettings(prev => ({
       ...prev,
-      [key]: { ...prev[key], value }
+      [key]: { key, description: prev[key]?.description || '', value }
     }));
   };
 
@@ -116,6 +116,85 @@ export default function GlobalSettingsPage() {
           )}
 
           <div className="space-y-8">
+            {/* Leaderboard Settings */}
+            <div className="border-b pb-8">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Leaderboard</h2>
+
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    id="leaderboard_enabled"
+                    checked={settings['leaderboard_enabled']?.value === 'true'}
+                    onChange={(e) => updateSetting('leaderboard_enabled', e.target.checked ? 'true' : 'false')}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                  />
+                  <label htmlFor="leaderboard_enabled" className="text-sm font-medium text-gray-700">
+                    Enable public leaderboard sharing
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Leaderboard Title
+                  </label>
+                  <input
+                    type="text"
+                    value={settings['leaderboard_title']?.value || ''}
+                    onChange={(e) => updateSetting('leaderboard_title', e.target.value)}
+                    placeholder="Leaderboard"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Share Key
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={settings['leaderboard_key']?.value || ''}
+                      onChange={(e) => updateSetting('leaderboard_key', e.target.value)}
+                      placeholder="Enter a secret key"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const key = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+                        updateSetting('leaderboard_key', key);
+                      }}
+                      className="px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 shrink-0"
+                    >
+                      Generate
+                    </button>
+                  </div>
+                </div>
+
+                {settings['leaderboard_enabled']?.value === 'true' && settings['leaderboard_key']?.value && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <p className="text-xs text-blue-700 font-medium mb-1">Shareable URL:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs text-blue-900 bg-blue-100 px-2 py-1 rounded flex-1 overflow-x-auto">
+                        {typeof window !== 'undefined' ? window.location.origin : ''}/leaderboard?key={settings['leaderboard_key'].value}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = `${window.location.origin}/leaderboard?key=${settings['leaderboard_key']?.value}`;
+                          navigator.clipboard.writeText(url);
+                        }}
+                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 shrink-0"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Default Consent Text */}
             <div>
               <label className="block text-lg font-semibold text-gray-900 mb-2">

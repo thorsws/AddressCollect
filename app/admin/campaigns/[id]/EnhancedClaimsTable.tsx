@@ -220,7 +220,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
             <p className="text-sm text-gray-600">Real Claims</p>
             <p className="text-2xl font-bold text-gray-900">{realClaims.length}</p>
             <p className="text-xs text-gray-500 mt-1">
-              {confirmedRealClaims.length} confirmed, {pendingRealClaims.length} pending
+              {confirmedRealClaims.length} verified, {pendingRealClaims.length} pending
             </p>
           </div>
           <div>
@@ -244,7 +244,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
             </div>
           )}
           <div>
-            <p className="text-sm text-gray-600">Confirmed (Real)</p>
+            <p className="text-sm text-gray-600">Verified Email (Real)</p>
             <p className="text-2xl font-bold text-green-600">{confirmedRealClaims.length}</p>
           </div>
           <div>
@@ -335,7 +335,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                                     : 'bg-gray-100 text-gray-800'
                                 }`}
                               >
-                                {claim.status}
+                                {claim.status === 'confirmed' ? 'verified email' : claim.status}
                               </span>
                               {claim.is_test_claim && (
                                 <span className="px-2 py-1 text-xs font-medium rounded bg-purple-100 text-purple-800">
@@ -602,7 +602,7 @@ export default function EnhancedClaimsTable({ claims, capacity_total, campaignSl
                                       onClick={() => changeStatus(claim.id, 'confirmed')}
                                       className="px-3 py-1 bg-green-100 text-green-800 text-xs rounded hover:bg-green-200"
                                     >
-                                      Mark Confirmed
+                                      Mark Verified
                                     </button>
                                   )}
                                   {claim.status !== 'pending' && (

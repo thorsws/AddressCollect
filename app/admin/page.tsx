@@ -13,7 +13,6 @@ export default async function AdminDashboard() {
   }
 
   // Fetch all campaigns with claim counts and creator info
-  // Sort by: favorited first, then active, then by created_at
   const { data: campaigns } = await supabaseAdmin
     .from('campaigns')
     .select(`
@@ -21,18 +20,27 @@ export default async function AdminDashboard() {
       claims(count),
       creator:admin_users!created_by(id, email, name)
     `)
-    .order('is_favorited', { ascending: false, nullsFirst: false })
     .order('is_active', { ascending: false })
     .order('created_at', { ascending: false });
 
+  // Fetch this user's favorites
+  const { data: userFavorites } = await supabaseAdmin
+    .from('campaign_favorites')
+    .select('campaign_id')
+    .eq('user_id', admin.id);
+
+  const favoritedIds = new Set((userFavorites || []).map(f => f.campaign_id));
+
   const campaignsWithStats = await Promise.all(
     (campaigns || []).map(async (campaign) => {
-      const { count: confirmedCount } = await supabaseAdmin
+      // Count all non-test claims that have an address (registered)
+      const { count: registeredCount } = await supabaseAdmin
         .from('claims')
         .select('*', { count: 'exact', head: true })
         .eq('campaign_id', campaign.id)
-        .eq('status', 'confirmed')
-        .eq('is_test_claim', false);
+        .eq('is_test_claim', false)
+        .neq('address1', '')
+        .not('address1', 'is', null);
 
       const { count: pendingCount } = await supabaseAdmin
         .from('claims')
@@ -43,7 +51,8 @@ export default async function AdminDashboard() {
 
       return {
         ...campaign,
-        confirmedCount: confirmedCount || 0,
+        is_favorited: favoritedIds.has(campaign.id),
+        registeredCount: registeredCount || 0,
         pendingCount: pendingCount || 0,
         creatorName: campaign.creator?.name || campaign.creator?.email || 'Unknown',
         creatorEmail: campaign.creator?.email || null,
@@ -127,6 +136,12 @@ export default async function AdminDashboard() {
               + Create Campaign
             </Link>
             <Link
+              href="/admin/leaderboard"
+              className="px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 text-center"
+            >
+              Leaderboard
+            </Link>
+            <Link
               href="/admin/addresses"
               className="px-4 py-2.5 bg-purple-600 text-white text-sm font-medium rounded hover:bg-purple-700 text-center"
             >
@@ -140,7 +155,7 @@ export default async function AdminDashboard() {
             <p className="text-gray-500">No campaigns yet. Create one to get started.</p>
           </div>
         ) : (
-          <CampaignsFilter campaigns={campaignsWithStats} currentUserEmail={admin.email} />
+          <CampaignsFilter campaigns={campaignsWithStats} currentUserEmail={admin.email} isSuperAdmin={admin.role === 'super_admin'} />
         )}
       </main>
     </div>
