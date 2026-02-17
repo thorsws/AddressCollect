@@ -172,26 +172,37 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
           )}
 
           {campaign.show_feature_section && (campaign.feature_image_url || campaign.feature_paragraph) && (
-            <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-6">
-              <div className={`flex ${campaign.feature_image_url ? 'flex-col sm:flex-row items-center sm:items-start gap-6' : ''}`}>
-                {campaign.feature_image_url && (
-                  <div className="flex-shrink-0">
+            <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg p-5 sm:p-6">
+              {campaign.feature_image_url && campaign.feature_paragraph ? (
+                <div className="flex flex-col sm:flex-row gap-5 sm:gap-6">
+                  <div className="flex-shrink-0 flex justify-center sm:justify-start">
                     <img
                       src={campaign.feature_image_url}
                       alt="Featured"
-                      className="w-32 h-32 sm:w-40 sm:h-40 object-cover rounded-lg shadow-md"
+                      className="w-28 h-28 sm:w-36 sm:h-36 object-cover rounded-full shadow-md"
                     />
                   </div>
-                )}
-                {campaign.feature_paragraph && (
-                  <div className="flex-1">
+                  <div className="flex-1 flex items-center min-w-0">
                     <RichContent
                       content={campaign.feature_paragraph}
                       className="text-gray-800 prose prose-base max-w-none"
                     />
                   </div>
-                )}
-              </div>
+                </div>
+              ) : campaign.feature_image_url ? (
+                <div className="flex justify-center">
+                  <img
+                    src={campaign.feature_image_url}
+                    alt="Featured"
+                    className="max-w-xs w-full rounded-lg shadow-md"
+                  />
+                </div>
+              ) : campaign.feature_paragraph ? (
+                <RichContent
+                  content={campaign.feature_paragraph}
+                  className="text-gray-800 prose prose-base max-w-none"
+                />
+              ) : null}
             </div>
           )}
 
@@ -250,7 +261,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
             {campaign.show_scarcity && campaign.capacity_total > 0 && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-5 mb-6">
                 <p className="text-blue-900 font-semibold text-base">
-                  {campaign.capacity_total - claimCount} of {campaign.capacity_total} spots remaining
+                  {campaign.capacity_total - claimCount} of {campaign.capacity_total} copies remaining
                 </p>
               </div>
             )}

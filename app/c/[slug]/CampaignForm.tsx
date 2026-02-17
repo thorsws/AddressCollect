@@ -566,7 +566,7 @@ export default function CampaignForm({ campaign, questions = [], notYetStarted =
             : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 disabled:opacity-50'
         }`}
       >
-        {loading ? 'Submitting...' : notYetStarted ? 'Submissions Not Yet Open' : 'Claim Your Book'}
+        {loading ? 'Submitting...' : notYetStarted ? 'Submissions Not Yet Open' : 'Claim Your Copy'}
       </button>
     </form>
   );
