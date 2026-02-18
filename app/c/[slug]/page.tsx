@@ -94,8 +94,7 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
           const query = supabaseAdmin
             .from('claims')
             .select('*', { count: 'exact', head: true })
-            .eq('campaign_id', campaign.id)
-            .eq('status', 'confirmed');
+            .eq('campaign_id', campaign.id);
           if (!campaign.test_mode) {
             query.eq('is_test_claim', false);
           }
