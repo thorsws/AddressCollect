@@ -2,6 +2,9 @@
   "name": "address-collect",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": "20.x"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:log": "next dev 2>&1 | tee dev.log",
