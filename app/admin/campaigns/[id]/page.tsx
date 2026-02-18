@@ -47,12 +47,13 @@ export default async function CampaignDetailsPage({ params }: { params: Promise<
                   memberRole === 'owner' ||
                   memberRole === 'editor';
 
-  // Fetch claims
+  // Fetch claims (limited to prevent memory issues on small dynos)
   const { data: claims } = await supabaseAdmin
     .from('claims')
     .select('*')
     .eq('campaign_id', id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(500);
 
   // Fetch invite codes if campaign requires them
   let inviteCodes = [];

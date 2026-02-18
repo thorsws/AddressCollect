@@ -11,33 +11,40 @@ export default async function AdminLeaderboardPage() {
     redirect('/admin/login');
   }
 
-  // Fetch leaderboard campaigns (active, not hidden, show_in_leaderboard)
-  const { data: campaigns } = await supabaseAdmin
-    .from('campaigns')
-    .select('id, internal_title, capacity_total')
-    .eq('is_active', true)
-    .eq('show_in_leaderboard', true)
-    .eq('is_hidden', false);
+  // Fetch leaderboard campaigns and claim stats in parallel
+  const [campaignsResult, claimStatsResult] = await Promise.all([
+    supabaseAdmin
+      .from('campaigns')
+      .select('id, internal_title, capacity_total')
+      .eq('is_active', true)
+      .eq('show_in_leaderboard', true)
+      .eq('is_hidden', false),
+    // Fetch all non-test claims with addresses in one query
+    supabaseAdmin
+      .from('claims')
+      .select('campaign_id, address1')
+      .eq('is_test_claim', false)
+      .neq('address1', '')
+      .not('address1', 'is', null),
+  ]);
 
-  // Get registered counts
-  const leaderboard = await Promise.all(
-    (campaigns || []).map(async (campaign) => {
-      const { count } = await supabaseAdmin
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('campaign_id', campaign.id)
-        .eq('is_test_claim', false)
-        .neq('address1', '')
-        .not('address1', 'is', null);
+  const campaigns = campaignsResult.data || [];
+  const campaignIds = new Set(campaigns.map(c => c.id));
 
-      return {
-        id: campaign.id,
-        name: campaign.internal_title,
-        capacity: campaign.capacity_total,
-        count: count || 0,
-      };
-    })
-  );
+  // Count registrations per campaign in memory
+  const countMap: Record<string, number> = {};
+  (claimStatsResult.data || []).forEach(claim => {
+    if (campaignIds.has(claim.campaign_id)) {
+      countMap[claim.campaign_id] = (countMap[claim.campaign_id] || 0) + 1;
+    }
+  });
+
+  const leaderboard = campaigns.map(campaign => ({
+    id: campaign.id,
+    name: campaign.internal_title,
+    capacity: campaign.capacity_total,
+    count: countMap[campaign.id] || 0,
+  }));
 
   // Sort by count DESC
   leaderboard.sort((a, b) => b.count - a.count);

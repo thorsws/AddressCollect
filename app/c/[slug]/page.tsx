@@ -86,37 +86,38 @@ export default async function CampaignPage({ params }: { params: Promise<{ slug:
     );
   }
 
-  // Get current claim count for scarcity
-  let claimCount = 0;
-  if (campaign.show_scarcity) {
-    // In test mode, count test claims. In production, exclude them.
-    const query = supabaseAdmin
-      .from('claims')
-      .select('*', { count: 'exact', head: true })
+  // Run all independent queries in parallel to reduce page load time
+  const [scarcityResult, questionsResult, globalSettingsResult] = await Promise.all([
+    // Scarcity count (only if needed)
+    campaign.show_scarcity
+      ? (() => {
+          const query = supabaseAdmin
+            .from('claims')
+            .select('*', { count: 'exact', head: true })
+            .eq('campaign_id', campaign.id)
+            .eq('status', 'confirmed');
+          if (!campaign.test_mode) {
+            query.eq('is_test_claim', false);
+          }
+          return query;
+        })()
+      : Promise.resolve({ count: 0 }),
+    // Custom questions
+    supabaseAdmin
+      .from('campaign_questions')
+      .select('*')
       .eq('campaign_id', campaign.id)
-      .eq('status', 'confirmed');
+      .order('display_order', { ascending: true }),
+    // Global settings
+    supabaseAdmin
+      .from('global_settings')
+      .select('key, value')
+      .in('key', ['default_consent_text', 'default_privacy_blurb']),
+  ]);
 
-    // Only exclude test claims if campaign is NOT in test mode
-    if (!campaign.test_mode) {
-      query.eq('is_test_claim', false);
-    }
-
-    const { count } = await query;
-    claimCount = count || 0;
-  }
-
-  // Fetch custom questions
-  const { data: questions } = await supabaseAdmin
-    .from('campaign_questions')
-    .select('*')
-    .eq('campaign_id', campaign.id)
-    .order('display_order', { ascending: true });
-
-  // Fetch global settings for defaults
-  const { data: globalSettings } = await supabaseAdmin
-    .from('global_settings')
-    .select('key, value')
-    .in('key', ['default_consent_text', 'default_privacy_blurb']);
+  const claimCount = scarcityResult.count || 0;
+  const questions = questionsResult.data;
+  const globalSettings = globalSettingsResult.data;
 
   const globalDefaults: Record<string, string> = {};
   globalSettings?.forEach(s => {

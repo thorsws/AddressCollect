@@ -12,53 +12,53 @@ export default async function AdminDashboard() {
     redirect('/admin/login');
   }
 
-  // Fetch all campaigns with claim counts and creator info
-  const { data: campaigns } = await supabaseAdmin
-    .from('campaigns')
-    .select(`
-      *,
-      claims(count),
-      creator:admin_users!created_by(id, email, name)
-    `)
-    .order('is_active', { ascending: false })
-    .order('created_at', { ascending: false });
+  // Fetch campaigns, favorites, and claim stats in parallel
+  const [campaignsResult, favoritesResult, claimStatsResult] = await Promise.all([
+    // 1. Fetch all campaigns with creator info
+    supabaseAdmin
+      .from('campaigns')
+      .select(`
+        *,
+        claims(count),
+        creator:admin_users!created_by(id, email, name)
+      `)
+      .order('is_active', { ascending: false })
+      .order('created_at', { ascending: false }),
+    // 2. Fetch this user's favorites
+    supabaseAdmin
+      .from('campaign_favorites')
+      .select('campaign_id')
+      .eq('user_id', admin.id),
+    // 3. Fetch all non-test claims with minimal fields for counting
+    supabaseAdmin
+      .from('claims')
+      .select('campaign_id, status, address1')
+      .eq('is_test_claim', false),
+  ]);
 
-  // Fetch this user's favorites
-  const { data: userFavorites } = await supabaseAdmin
-    .from('campaign_favorites')
-    .select('campaign_id')
-    .eq('user_id', admin.id);
+  const campaigns = campaignsResult.data || [];
+  const favoritedIds = new Set((favoritesResult.data || []).map(f => f.campaign_id));
 
-  const favoritedIds = new Set((userFavorites || []).map(f => f.campaign_id));
+  // Count registered and pending per campaign in memory (avoids N*2 DB queries)
+  const registeredCounts: Record<string, number> = {};
+  const pendingCounts: Record<string, number> = {};
+  (claimStatsResult.data || []).forEach(claim => {
+    if (claim.address1 && claim.address1 !== '') {
+      registeredCounts[claim.campaign_id] = (registeredCounts[claim.campaign_id] || 0) + 1;
+    }
+    if (claim.status === 'pending') {
+      pendingCounts[claim.campaign_id] = (pendingCounts[claim.campaign_id] || 0) + 1;
+    }
+  });
 
-  const campaignsWithStats = await Promise.all(
-    (campaigns || []).map(async (campaign) => {
-      // Count all non-test claims that have an address (registered)
-      const { count: registeredCount } = await supabaseAdmin
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('campaign_id', campaign.id)
-        .eq('is_test_claim', false)
-        .neq('address1', '')
-        .not('address1', 'is', null);
-
-      const { count: pendingCount } = await supabaseAdmin
-        .from('claims')
-        .select('*', { count: 'exact', head: true })
-        .eq('campaign_id', campaign.id)
-        .eq('status', 'pending')
-        .eq('is_test_claim', false);
-
-      return {
-        ...campaign,
-        is_favorited: favoritedIds.has(campaign.id),
-        registeredCount: registeredCount || 0,
-        pendingCount: pendingCount || 0,
-        creatorName: campaign.creator?.name || campaign.creator?.email || 'Unknown',
-        creatorEmail: campaign.creator?.email || null,
-      };
-    })
-  );
+  const campaignsWithStats = campaigns.map((campaign) => ({
+    ...campaign,
+    is_favorited: favoritedIds.has(campaign.id),
+    registeredCount: registeredCounts[campaign.id] || 0,
+    pendingCount: pendingCounts[campaign.id] || 0,
+    creatorName: campaign.creator?.name || campaign.creator?.email || 'Unknown',
+    creatorEmail: campaign.creator?.email || null,
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
