@@ -195,6 +195,63 @@ export default function GlobalSettingsPage() {
               </div>
             </div>
 
+            {/* Contacts Page Settings */}
+            <div className="border-b pb-8">
+              <h2 className="text-lg font-bold text-gray-900 mb-4">Contacts Page</h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Share a code-gated contacts list showing all leads across campaigns. Anyone with the code can view and annotate contacts.
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Access Code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={settings['contacts_key']?.value || ''}
+                      onChange={(e) => updateSetting('contacts_key', e.target.value)}
+                      placeholder="Enter an access code"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const key = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
+                        updateSetting('contacts_key', key);
+                      }}
+                      className="px-3 py-2 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 shrink-0"
+                    >
+                      Generate
+                    </button>
+                  </div>
+                </div>
+
+                {settings['contacts_key']?.value && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                    <p className="text-xs text-blue-700 font-medium mb-1">Contacts Page URL:</p>
+                    <div className="flex items-center gap-2">
+                      <code className="text-xs text-blue-900 bg-blue-100 px-2 py-1 rounded flex-1 overflow-x-auto">
+                        {typeof window !== 'undefined' ? window.location.origin : ''}/contacts
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = `${window.location.origin}/contacts`;
+                          navigator.clipboard.writeText(url);
+                        }}
+                        className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 shrink-0"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-2">Share the URL and access code separately with anyone who needs to see leads.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Default Consent Text */}
             <div>
               <label className="block text-lg font-semibold text-gray-900 mb-2">
