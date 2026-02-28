@@ -118,8 +118,11 @@ export default function ContactsPage() {
     );
   });
 
-  const leads = filtered.filter(c => c.is_lead);
-  const others = filtered.filter(c => !c.is_lead);
+  const sortByDate = (a: Contact, b: Contact) =>
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+
+  const leads = filtered.filter(c => c.is_lead).sort(sortByDate);
+  const others = filtered.filter(c => !c.is_lead).sort(sortByDate);
 
   // Gate view
   if (!accessKey) {
